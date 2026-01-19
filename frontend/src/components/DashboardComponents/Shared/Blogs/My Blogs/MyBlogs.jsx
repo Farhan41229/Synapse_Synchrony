@@ -30,7 +30,7 @@ const MyBlogs = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+
   // AI Summary Sheet state
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
   const [selectedBlogForSummary, setSelectedBlogForSummary] = useState(null);
@@ -42,7 +42,7 @@ const MyBlogs = () => {
     AOS.init({ duration: 800, once: true, easing: 'ease-in-out' });
   }, []);
 
-  // Fetch user's blogs
+  // Fetch the current user's blogs
   const {
     data: blogs,
     isLoading,
@@ -69,7 +69,6 @@ const MyBlogs = () => {
     },
   });
 
-  // Handle delete
   const handleDelete = (blog) => {
     setSelectedBlog(blog);
     setShowDeleteModal(true);
@@ -81,7 +80,7 @@ const MyBlogs = () => {
     }
   };
 
-  // Handle AI Summarize
+  // Generate AI summary for a blog post
   const handleSummarize = async (blog) => {
     setSelectedBlogForSummary(blog);
     setSummaryData(null);
@@ -94,18 +93,17 @@ const MyBlogs = () => {
       setSummaryData(response.data);
     } catch (err) {
       setSummaryError(err);
-      toast.error('Failed to generate summary');
+      toast.error('Failed to generate AI summary');
     } finally {
       setIsLoadingSummary(false);
     }
   };
 
-  // Filter blogs based on search
+  // Filter blogs by search query
   const filteredBlogs = blogs?.filter((blog) =>
     blog.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Skeleton Loader
   const SkeletonLoader = () => (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -137,7 +135,7 @@ const MyBlogs = () => {
             </div>
             <Link
               to="/blog/blogs/create"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl"
             >
               <Plus className="w-5 h-5" />
               Create New Blog
@@ -152,7 +150,7 @@ const MyBlogs = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search your blogs..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:border-[#04642a] focus:outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:border-primary focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -160,8 +158,8 @@ const MyBlogs = () => {
         {/* Stats */}
         {!isLoading && blogs && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" data-aos="fade-up">
-            <div className="p-4 bg-gradient-to-r from-[#04642a]/10 to-[#15a33d]/10 dark:from-[#04642a]/20 dark:to-[#15a33d]/20 rounded-xl border border-[#04642a]/20">
-              <FileText className="w-6 h-6 text-[#04642a] mb-2" />
+            <div className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+              <FileText className="w-6 h-6 text-primary mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {blogs.length}
               </div>
@@ -178,8 +176,8 @@ const MyBlogs = () => {
                 Total Likes
               </div>
             </div>
-            <div className="p-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-xl border border-purple-500/20">
-              <Eye className="w-6 h-6 text-purple-600 mb-2" />
+            <div className="p-4 bg-gradient-to-r from-violet-500/10 to-violet-600/10 rounded-xl border border-violet-500/20">
+              <Eye className="w-6 h-6 text-violet-600 mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {blogs.reduce((sum, blog) => sum + (blog.views || 0), 0)}
               </div>
@@ -231,7 +229,7 @@ const MyBlogs = () => {
             {!searchQuery && (
               <Link
                 to="/blog/blogs/create"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Create Your First Blog
@@ -255,17 +253,16 @@ const MyBlogs = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#04642a] text-white">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-primary text-white">
                       {blog.category}
                     </span>
                   </div>
                   <div className="absolute top-3 right-3">
                     <span
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                        blog.isPublished
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${blog.isPublished
                           ? 'bg-green-500 text-white'
                           : 'bg-gray-500 text-white'
-                      }`}
+                        }`}
                     >
                       {blog.isPublished ? 'Published' : 'Draft'}
                     </span>
@@ -307,7 +304,7 @@ const MyBlogs = () => {
                   <div className="flex gap-2 mb-2">
                     <Link
                       to={`/blog/BlogDetail/${blog._id}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all text-sm"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
                       View
@@ -329,7 +326,7 @@ const MyBlogs = () => {
                   {/* AI Summarize Button */}
                   <button
                     onClick={() => handleSummarize(blog)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-pink-500 text-white rounded-lg font-medium hover:from-violet-600 hover:to-pink-600 transition-all text-sm"
                   >
                     <Sparkles className="w-4 h-4" />
                     Summarize with AI

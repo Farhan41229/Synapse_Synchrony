@@ -1,19 +1,18 @@
 import React from 'react';
-import { MapPin, ExternalLink } from 'lucide-react';
+import { MapPin, ExternalLink, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const LocationMessage = ({ latitude, longitude, address, placeName, message, isSender }) => {
-  // Generate Google Maps URL
+  // Build Google Maps URL
   const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-  // Generate static map placeholder URL using OpenStreetMap
+  // OpenStreetMap embed - no API key required
   const staticMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}&layer=mapnik&marker=${latitude},${longitude}`;
 
   return (
     <div className={`max-w-sm space-y-2 ${isSender ? 'ml-auto' : 'mr-auto'}`}>
       {/* Map Preview */}
       <div className="relative rounded-lg overflow-hidden border bg-muted/30">
-        {/* Using iframe for OSM embed - free, no API key needed */}
         <iframe
           width="100%"
           height="200"
@@ -41,12 +40,12 @@ const LocationMessage = ({ latitude, longitude, address, placeName, message, isS
           </div>
         </div>
 
-        {/* Optional Message */}
+        {/* Optional accompanying message */}
         {message && (
           <p className="text-sm">{message}</p>
         )}
 
-        {/* View on Google Maps Button */}
+        {/* Open in Google Maps */}
         <Button
           variant="outline"
           size="sm"
@@ -54,7 +53,7 @@ const LocationMessage = ({ latitude, longitude, address, placeName, message, isS
           onClick={() => window.open(googleMapsUrl, '_blank', 'noopener,noreferrer')}
         >
           <ExternalLink className="size-4" />
-          View on Google Maps
+          Open in Google Maps
         </Button>
       </div>
     </div>

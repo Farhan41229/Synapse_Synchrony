@@ -1,4 +1,3 @@
-import groupImg from '@/assets/group-img.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
@@ -10,12 +9,12 @@ const AvatarWithBadge = ({
   size = 'w-9 h-9',
   className,
 }) => {
-  const avatar = isGroup ? groupImg : src || '';
+  const fallbackInitial = name?.charAt(0)?.toUpperCase() || '?';
 
   return (
     <div className="relative shrink-0">
-      <Avatar className={size}>
-        <AvatarImage src={avatar} />
+      <Avatar className={cn(size, 'ring-1 ring-border')}>
+        <AvatarImage src={src || ''} alt={name || 'avatar'} />
         <AvatarFallback
           className={cn(
             `bg-primary/10
@@ -24,7 +23,7 @@ const AvatarWithBadge = ({
             className && className
           )}
         >
-          {name?.charAt(0)}
+          {fallbackInitial}
         </AvatarFallback>
       </Avatar>
 
@@ -35,6 +34,7 @@ const AvatarWithBadge = ({
           right-0
           h-2.5 w-2.5 rounded-full
           border-2
+          border-background
           bg-green-500
           "
         />

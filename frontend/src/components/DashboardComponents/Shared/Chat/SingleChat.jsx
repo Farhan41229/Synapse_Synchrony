@@ -22,12 +22,11 @@ const SingleChat = () => {
   let messages = singleChat?.messages || [];
 
   useEffect(() => {
-    console.log('Fetching the Single Chat for the id: ', chatId);
     if (!chatId) return;
     fetchSingleChat(chatId);
   }, [fetchSingleChat, chatId]);
 
-  //Socket Chat room
+  // Join/leave socket room on chatId change
   useEffect(() => {
     if (!chatId || !socket) return;
 
@@ -45,18 +44,14 @@ const SingleChat = () => {
     );
   }
 
-  // console.log(
-  //   'The chat and the singlechat after loading is done is: ',
-  //   chat,
-  //   singleChat
-  // );
+  // Re-read after loading completes
   chat = singleChat?.chat;
-  messages = singleChat?.messages;
+  messages = singleChat?.messages || [];
 
   if (!chat) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <p className="text-lg">Chat not found</p>
+        <p className="text-muted-foreground text-lg">Conversation not found.</p>
       </div>
     );
   }
@@ -68,8 +63,8 @@ const SingleChat = () => {
       <div className="flex-1 overflow-y-auto bg-background">
         {messages.length === 0 ? (
           <EmptyState
-            title="Start a conversation"
-            description="No messages yet. Send the first message"
+            title="Start the conversation"
+            description="No messages yet — send the first one!"
           />
         ) : (
           <ChatBody chatId={chatId} messages={messages} onReply={setReplyTo} />

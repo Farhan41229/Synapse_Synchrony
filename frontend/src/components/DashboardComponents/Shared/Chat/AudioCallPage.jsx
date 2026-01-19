@@ -46,25 +46,19 @@ const AudioCallPage = () => {
       if (hasJoinedRef.current) return;
 
       try {
-        console.log('🎙️ Initializing audio call...');
         hasJoinedRef.current = true;
 
         let audioClient;
 
         if (globalAudioClient && globalAudioUserId === user._id) {
-          console.log('Reusing existing audio client');
           audioClient = globalAudioClient;
         } else {
           if (globalAudioClient) {
-            console.log('Disconnecting old audio client');
             try {
               await globalAudioClient.disconnectUser();
-            } catch (e) {
-              console.error('Error disconnecting old client:', e);
-            }
+            } catch (_e) { }
           }
 
-          console.log('Creating new audio client');
           const streamUser = {
             id: user._id,
             name: user.name,
@@ -83,18 +77,14 @@ const AudioCallPage = () => {
 
         const callInstance = audioClient.call('default', callId);
 
-        console.log('📞 Joining audio call:', callId);
         await callInstance.join({ create: true });
 
-        // Disable camera for audio-only call
+        // Disable camera for audio-only calls
         await callInstance.camera.disable();
-
-        console.log('✅ Joined audio call successfully');
 
         setClient(audioClient);
         setCall(callInstance);
       } catch (error) {
-        console.error('❌ Error joining audio call:', error);
         toast.error('Could not join the audio call. Please try again.');
         hasJoinedRef.current = false;
       } finally {
@@ -105,18 +95,14 @@ const AudioCallPage = () => {
     initCall();
 
     return () => {
-      console.log('🧹 Leaving audio call...');
       if (call) {
-        call
-          .leave()
-          .then(() => console.log('✅ Left audio call'))
-          .catch((err) => console.error('❌ Error leaving:', err));
+        call.leave().catch(() => { });
       }
       hasJoinedRef.current = false;
     };
   }, [tokenData, user, callId]);
 
-  // Inject CSS
+  // Inject Stream control bar styles
   useEffect(() => {
     const styleEl = document.createElement('style');
     styleEl.innerHTML = `
@@ -233,7 +219,7 @@ const AudioCallContent = () => {
   const { useCallCallingState, useParticipants } = useCallStateHooks();
   const callingState = useCallCallingState();
   const participants = useParticipants();
-  const call = useCall(); // Get the call instance
+  const call = useCall();
 
   const navigate = useNavigate();
 
@@ -274,7 +260,7 @@ const AudioCallContent = () => {
           ))}
         </div>
 
-        {/* Call info */}
+        {/* Call info bar */}
         <div
           style={{
             position: 'absolute',
@@ -307,32 +293,23 @@ const AudioCallContent = () => {
   );
 };
 
-// Separate component for each participant to track state
+// Individual participant card with mic status
 const ParticipantCard = ({ participant, call }) => {
   const [hasAudio, setHasAudio] = useState(false);
 
   useEffect(() => {
-    // For local participant, check the call's microphone state directly
     if (participant.isLocalParticipant && call) {
       const checkLocalAudio = () => {
         const micEnabled = call.microphone?.state?.status === 'enabled';
         setHasAudio(micEnabled);
-        console.log(
-          `${participant.name} (local) mic status:`,
-          call.microphone?.state?.status,
-          '→',
-          micEnabled
-        );
       };
 
       checkLocalAudio();
 
-      // Subscribe to microphone state changes
       const subscription = call.microphone?.state?.status$?.subscribe(() => {
         checkLocalAudio();
       });
 
-      // Fallback: poll every 200ms
       const interval = setInterval(checkLocalAudio, 200);
 
       return () => {
@@ -340,12 +317,10 @@ const ParticipantCard = ({ participant, call }) => {
         clearInterval(interval);
       };
     } else {
-      // For remote participants, use publishedTracks
       const audioEnabled =
         participant.publishedTracks?.includes('audio') ?? false;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasAudio(audioEnabled);
-      console.log(`${participant.name} (remote) audio:`, audioEnabled);
     }
   }, [participant, call]);
 
@@ -446,9 +421,8 @@ const ParticipantCard = ({ participant, call }) => {
             : 'rgba(239, 68, 68, 0.2)',
           borderRadius: '20px',
           backdropFilter: 'blur(10px)',
-          border: `1px solid ${
-            hasAudio ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
-          }`,
+          border: `1px solid ${hasAudio ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+            }`,
         }}
       >
         <span

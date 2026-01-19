@@ -30,7 +30,7 @@ const MyEvents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+
   // AI Summary Sheet state
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
   const [selectedEventForSummary, setSelectedEventForSummary] = useState(null);
@@ -42,7 +42,7 @@ const MyEvents = () => {
     AOS.init({ duration: 800, once: true, easing: 'ease-in-out' });
   }, []);
 
-  // Fetch user's events
+  // Fetch current user's events
   const {
     data: events,
     isLoading,
@@ -69,7 +69,6 @@ const MyEvents = () => {
     },
   });
 
-  // Handle delete
   const handleDelete = (event) => {
     setSelectedEvent(event);
     setShowDeleteModal(true);
@@ -81,7 +80,7 @@ const MyEvents = () => {
     }
   };
 
-  // Handle AI Summarize
+  // Generate AI summary for an event
   const handleSummarize = async (event) => {
     setSelectedEventForSummary(event);
     setSummaryData(null);
@@ -94,18 +93,17 @@ const MyEvents = () => {
       setSummaryData(response.data);
     } catch (err) {
       setSummaryError(err);
-      toast.error('Failed to generate summary');
+      toast.error('Failed to generate AI summary');
     } finally {
       setIsLoadingSummary(false);
     }
   };
 
-  // Filter events based on search
+  // Filter events by search query
   const filteredEvents = events?.filter((event) =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Skeleton Loader
   const SkeletonLoader = () => (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -137,7 +135,7 @@ const MyEvents = () => {
             </div>
             <Link
               to="/dashboard/create-event"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl"
             >
               <Plus className="w-5 h-5" />
               Create New Event
@@ -152,7 +150,7 @@ const MyEvents = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search your events..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:border-[#04642a] focus:outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:border-primary focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -160,8 +158,8 @@ const MyEvents = () => {
         {/* Stats */}
         {!isLoading && events && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" data-aos="fade-up">
-            <div className="p-4 bg-gradient-to-r from-[#04642a]/10 to-[#15a33d]/10 dark:from-[#04642a]/20 dark:to-[#15a33d]/20 rounded-xl border border-[#04642a]/20">
-              <CalendarDays className="w-6 h-6 text-[#04642a] mb-2" />
+            <div className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+              <CalendarDays className="w-6 h-6 text-primary mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {events.length}
               </div>
@@ -187,8 +185,8 @@ const MyEvents = () => {
                 Upcoming
               </div>
             </div>
-            <div className="p-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-xl border border-purple-500/20">
-              <Clock className="w-6 h-6 text-purple-600 mb-2" />
+            <div className="p-4 bg-gradient-to-r from-violet-500/10 to-violet-600/10 rounded-xl border border-violet-500/20">
+              <Clock className="w-6 h-6 text-violet-600 mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {events.filter((event) => new Date(event.endDate) < new Date()).length}
               </div>
@@ -226,7 +224,7 @@ const MyEvents = () => {
             {!searchQuery && (
               <Link
                 to="/dashboard/create-event"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Create Your First Event
@@ -250,7 +248,7 @@ const MyEvents = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#04642a] text-white">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-primary text-white">
                       {event.eventType}
                     </span>
                   </div>
@@ -273,11 +271,11 @@ const MyEvents = () => {
                   {/* Event Details */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <Calendar className="w-4 h-4 text-[#04642a]" />
+                      <Calendar className="w-4 h-4 text-primary" />
                       <span>{format(new Date(event.startDate), 'MMM dd, yyyy')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <MapPin className="w-4 h-4 text-[#04642a]" />
+                      <MapPin className="w-4 h-4 text-primary" />
                       <span className="line-clamp-1">{event.location}</span>
                     </div>
                   </div>
@@ -297,7 +295,7 @@ const MyEvents = () => {
                   <div className="flex gap-2 mb-2">
                     <Link
                       to={`/blog/EventDetail/${event._id}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#04642a] text-white rounded-lg font-medium hover:bg-[#15a33d] transition-all text-sm"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
                       View
@@ -319,7 +317,7 @@ const MyEvents = () => {
                   {/* AI Summarize Button */}
                   <button
                     onClick={() => handleSummarize(event)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-pink-500 text-white rounded-lg font-medium hover:from-violet-600 hover:to-pink-600 transition-all text-sm"
                   >
                     <Sparkles className="w-4 h-4" />
                     Summarize with AI

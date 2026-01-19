@@ -38,8 +38,6 @@ const ChatHeader = ({ chat, currentUserId }) => {
       if (!tokenData?.token || !user || !otherUser) return;
 
       try {
-        console.log('Initializing stream chat client...');
-
         const client = StreamChat.getInstance(STREAM_API_KEY);
 
         await client.connectUser(
@@ -51,24 +49,19 @@ const ChatHeader = ({ chat, currentUserId }) => {
           tokenData.token
         );
 
-        console.log('User connected to Stream');
-
         const channelId = [user._id, otherUser._id].sort().join('-');
 
         const currChannel = client.channel('messaging', channelId, {
           members: [user._id, otherUser._id],
-          name: `${user.name} and ${otherUser.name}`,
+          name: `${user.name} & ${otherUser.name}`,
         });
 
         await currChannel.watch();
 
-        console.log('Channel created successfully');
-
         setChatClient(client);
         setChannel(currChannel);
       } catch (error) {
-        console.error('Error initializing chat:', error);
-        // toast.error('Could not connect to chat. Please try again.');
+        toast.error('Failed to initialize call services.');
       } finally {
         setLoading(false);
       }
@@ -78,7 +71,6 @@ const ChatHeader = ({ chat, currentUserId }) => {
 
     return () => {
       if (chatClient) {
-        console.log('Disconnecting chat client...');
         chatClient.disconnectUser();
       }
     };
@@ -116,8 +108,7 @@ const ChatHeader = ({ chat, currentUserId }) => {
         navigate(`/call/${callId}`);
       }, 100);
     } catch (error) {
-      console.error('Error starting video call:', error);
-      toast.error('Could not start video call');
+      toast.error('Could not start video call. Please try again.');
     }
   };
 
@@ -128,7 +119,6 @@ const ChatHeader = ({ chat, currentUserId }) => {
     }
 
     try {
-      // Use chatId directly (same as video) since it's the same conversation
       const callId = chatId;
       const callUrl = `${window.location.origin}/audio-call/${callId}`;
 
@@ -154,8 +144,7 @@ const ChatHeader = ({ chat, currentUserId }) => {
         navigate(`/audio-call/${callId}`);
       }, 100);
     } catch (error) {
-      console.error('Error starting audio call:', error);
-      toast.error('Could not start audio call');
+      toast.error('Could not start audio call. Please try again.');
     }
   };
 
@@ -185,9 +174,8 @@ const ChatHeader = ({ chat, currentUserId }) => {
         <div className="ml-2">
           <h5 className="font-semibold">{name}</h5>
           <p
-            className={`text-sm ${
-              isOnline ? 'text-green-500' : 'text-muted-foreground'
-            }`}
+            className={`text-sm ${isOnline ? 'text-green-500' : 'text-muted-foreground'
+              }`}
           >
             {subheading}
           </p>
@@ -210,21 +198,19 @@ const ChatHeader = ({ chat, currentUserId }) => {
             <Video
               onClick={handleVideoCall}
               size={22}
-              className={`hover:cursor-pointer transition-all ${
-                loading || !channel
+              className={`hover:cursor-pointer transition-all ${loading || !channel
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:opacity-75 hover:scale-110'
-              }`}
+                }`}
               title={loading ? 'Setting up video call...' : 'Start video call'}
             />
             <PhoneCall
               onClick={handleAudioCall}
               size={22}
-              className={`hover:cursor-pointer transition-all ${
-                loading || !channel
+              className={`hover:cursor-pointer transition-all ${loading || !channel
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:opacity-75 hover:scale-110'
-              }`}
+                }`}
               title={loading ? 'Setting up audio call...' : 'Start audio call'}
             />
           </div>

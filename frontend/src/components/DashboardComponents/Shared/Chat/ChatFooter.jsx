@@ -27,11 +27,10 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
     isCurrentChatAI,
   } = useChat();
 
-  // ✅ State to track if this is an AI chat
   const [isAI, setIsAI] = useState(false);
   const [isCheckingAI, setIsCheckingAI] = useState(false);
 
-  // ✅ Check if this is an AI chat - only run when chatId changes
+  // Determine AI chat status only when chatId changes
   useEffect(() => {
     let isMounted = true;
 
@@ -41,22 +40,17 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
         return;
       }
 
-      // Prevent multiple simultaneous checks
       if (isCheckingAI) return;
 
       setIsCheckingAI(true);
-      console.log('🔍 Checking if chat is AI chat:', chatId);
 
       try {
         const result = await isCurrentChatAI(chatId);
 
-        // Only update state if component is still mounted
         if (isMounted) {
-          console.log('✅ isAI result:', result);
           setIsAI(result);
         }
       } catch (error) {
-        console.error('Error checking AI chat:', error);
         if (isMounted) {
           setIsAI(false);
         }
@@ -69,11 +63,10 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
 
     checkIfAI();
 
-    // Cleanup function
     return () => {
       isMounted = false;
     };
-  }, [chatId]); // ✅ Only re-run when chatId changes
+  }, [chatId]); // Only re-run when chatId changes
 
   const isSending = isAI ? isSendingAIMsg : isSendingMsg;
 
@@ -114,7 +107,6 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
       return;
     }
 
-    // ✅ Capture replyTo BEFORE clearing it
     const currentReplyTo = replyTo;
 
     const payload = {
@@ -125,22 +117,12 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
       user,
     };
 
-    // ✅ Use appropriate send function based on chat type
-    console.log('The response for isAI is: ', isAI);
     if (isAI) {
-      // AI chat - no images or replies supported
+      // AI chat does not support images or reply threading
       if (image) {
         toast.error('AI chat does not support images yet');
         return;
       }
-
-      console.log('🎯 ChatFooter: Calling sendAIMessage');
-      console.log('📦 ChatFooter: Payload:', {
-        chatId,
-        content: values.message,
-        user,
-      });
-      console.log('👤 ChatFooter: User object:', user);
 
       await sendAIMessage({
         chatId,
@@ -152,7 +134,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
       await sendMessage(payload);
     }
 
-    // Clear state AFTER sending
+    // Clear form state after sending
     onCancelReply();
     handleRemoveImage();
     form.reset();
@@ -191,10 +173,10 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
           </div>
         )}
 
-        {/* ✅ AI Indicator */}
+        {/* AI Indicator */}
         {isAI && (
           <div className="max-w-6xl mx-auto px-8.5 pb-2">
-            <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
+            <div className="flex items-center gap-2 text-xs text-violet-600 dark:text-violet-400">
               <Sparkles className="w-3.5 h-3.5" />
               <span className="font-medium">Synapse AI Chat</span>
             </div>
@@ -217,7 +199,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
               flex items-end gap-2
               "
             >
-              {/* ✅ Hide image upload for AI chats */}
+              {/* Hide image upload for AI chats */}
               {!isAI && (
                 <div className="flex items-center gap-1.5">
                   <Button
@@ -251,7 +233,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
                       {...field}
                       autoComplete="off"
                       placeholder={
-                        isAI ? 'Ask AI anything...' : 'Type new message'
+                        isAI ? 'Ask Synapse AI anything...' : 'Type a message...'
                       }
                       className="min-h-10 bg-background"
                     />
@@ -259,7 +241,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
                 )}
               />
 
-              {/* ✅ Location & Microphone buttons (hide for AI chats) */}
+              {/* Location & Mic buttons (only for regular chats) */}
               {!isAI && (
                 <div className="flex items-center gap-1">
                   <Button
@@ -273,7 +255,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
                   >
                     <MapPin className="h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -293,7 +275,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
                 size="icon"
                 className={
                   isAI
-                    ? 'rounded-lg bg-purple-600 hover:bg-purple-700'
+                    ? 'rounded-lg bg-violet-600 hover:bg-violet-700'
                     : 'rounded-lg'
                 }
                 disabled={isSending}
@@ -309,7 +291,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
         </Form>
       </div>
 
-      {/* ✅ Hide reply bar for AI chats */}
+      {/* Hide reply bar for AI chats */}
       {replyTo && !isSending && !isAI && (
         <ChatReplyBar
           replyTo={replyTo}
@@ -318,7 +300,7 @@ const ChatFooter = ({ chatId, currentUserId, replyTo, onCancelReply }) => {
         />
       )}
 
-      {/* ✅ Location Picker Dialog */}
+      {/* Location Picker Dialog */}
       <LocationPicker
         chatId={chatId}
         replyTo={replyTo?._id}

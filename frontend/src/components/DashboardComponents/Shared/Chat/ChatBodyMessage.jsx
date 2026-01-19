@@ -12,20 +12,19 @@ import LocationMessage from './LocationMessage';
 
 const ChatBodyMessage = memo(({ message, onReply }) => {
   const { user } = useAuthStore();
-  // ✅ CRITICAL: Check if message exists BEFORE accessing any properties
+  // Guard: message must exist before accessing properties
   if (!message) {
-    console.warn('ChatBodyMessage received undefined message');
     return null;
   }
 
   const userId = user?._id || null;
   const isCurrentUser = message?.sender?._id === userId;
 
-  // ✅ Check if this is an AI message
+  // Detect AI-generated messages
   const isAIMessage =
-    message?.sender?.isAI === true || message?.sender?.name === 'Whoop AI';
+    message?.sender?.isAI === true || message?.sender?.name === 'Synapse AI';
 
-  // ✅ Check if this is a "thinking" message
+  // Detect in-progress "thinking" state
   const isThinking =
     message?.status === 'generating...' ||
     message?.content === '⏳ Thinking...';
@@ -40,7 +39,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
   const containerClass = cn(
     'group flex gap-2 py-3 px-4',
     isCurrentUser && 'flex-row-reverse text-left',
-    isAIMessage && !isCurrentUser && 'bg-purple-50/50 dark:bg-purple-950/20',
+    isAIMessage && !isCurrentUser && 'bg-violet-50/50 dark:bg-violet-950/20',
   );
 
   const contentWrapperClass = cn(
@@ -53,7 +52,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
     isCurrentUser
       ? 'bg-accent dark:bg-primary/40 rounded-tr-xl rounded-l-xl'
       : isAIMessage
-        ? 'bg-gradient-to-br from-purple-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-purple-600/20 border border-purple-200/50 dark:border-purple-700/50 rounded-bl-xl rounded-r-xl'
+        ? 'bg-gradient-to-br from-violet-500/10 to-violet-600/10 dark:from-violet-500/20 dark:to-violet-600/20 border border-violet-200/50 dark:border-violet-700/50 rounded-bl-xl rounded-r-xl'
         : 'bg-[#F5F5F5] dark:bg-accent rounded-bl-xl rounded-r-xl',
   );
 
@@ -62,7 +61,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
     isCurrentUser
       ? 'bg-primary/20 border-l-primary'
       : isAIMessage
-        ? 'bg-purple-100 dark:bg-purple-900/30 border-l-purple-500'
+        ? 'bg-violet-100 dark:bg-violet-900/30 border-l-violet-500'
         : 'bg-gray-200 dark:bg-secondary border-l-[#CC4A31]',
   );
 
@@ -74,12 +73,12 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
             <AvatarWithBadge
               name={message?.sender?.name || 'Unknown'}
               src={message?.sender?.avatar || ''}
-              className={isAIMessage ? 'ring-2 ring-purple-500/50' : ''}
+              className={isAIMessage ? 'ring-2 ring-violet-500/50' : ''}
             />
             {isAIMessage && (
               <div
                 className="absolute -bottom-0.5 -right-0.5 
-                w-4 h-4 bg-purple-600 rounded-full 
+                w-4 h-4 bg-violet-600 rounded-full 
                 flex items-center justify-center
                 border border-white dark:border-gray-900"
               >
@@ -98,19 +97,19 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
           )}
         >
           <div className={messageClass}>
-            {/* Header */}
+            {/* Sender Header */}
             <div className="flex items-center gap-2 mb-0.5 pb-1">
               <div className="flex items-center gap-1.5">
                 <span
                   className={cn(
                     'text-xs font-semibold',
-                    isAIMessage && 'text-purple-700 dark:text-purple-300',
+                    isAIMessage && 'text-violet-700 dark:text-violet-300',
                   )}
                 >
                   {senderName}
                 </span>
                 {isAIMessage && (
-                  <span className="px-1.5 py-0.5 text-[9px] font-medium bg-purple-600 text-white rounded">
+                  <span className="px-1.5 py-0.5 text-[9px] font-medium bg-violet-600 text-white rounded">
                     AI
                   </span>
                 )}
@@ -120,7 +119,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
               </span>
             </div>
 
-            {/* ReplyToBox */}
+            {/* Reply Preview Box */}
             {message?.replyTo && (
               <div className={replyBoxClass}>
                 <h5 className="font-medium">{replySendername}</h5>
@@ -153,7 +152,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
               />
             )}
 
-            {/* ✅ Location Message */}
+            {/* Location Message */}
             {message?.messageType === 'location' && message?.location && (
               <LocationMessage
                 latitude={message.location.latitude}
@@ -165,12 +164,12 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
               />
             )}
 
-            {/* ✅ Message content with thinking indicator */}
+            {/* Text content with thinking indicator */}
             {message?.content && message?.messageType !== 'location' && (
               <p
                 className={cn(
                   isThinking &&
-                    'flex items-center gap-2 text-purple-600 dark:text-purple-400',
+                  'flex items-center gap-2 text-violet-600 dark:text-violet-400',
                 )}
               >
                 {isThinking && <Sparkles className="w-4 h-4 animate-pulse" />}
@@ -196,7 +195,7 @@ const ChatBodyMessage = memo(({ message, onReply }) => {
             )}
           </div>
 
-          {/* Reply Icon Button - Hide for AI messages */}
+          {/* Reply Button - hidden for AI messages */}
           {!isAIMessage && (
             <Button
               variant="outline"

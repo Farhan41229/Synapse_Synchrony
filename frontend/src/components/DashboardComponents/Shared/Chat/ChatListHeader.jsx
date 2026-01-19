@@ -16,7 +16,7 @@ const ChatListHeader = ({ onSearch }) => {
 
   const handleAIChat = async () => {
     const aiChat = await fetchAIChat();
-    if (aiChat) {
+    if (aiChat?._id) {
       navigate(`/dashboard/chat/${aiChat._id}`);
     }
   };
@@ -24,7 +24,7 @@ const ChatListHeader = ({ onSearch }) => {
   return (
     <div className="px-3 py-3 border-b border-border">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-semibold">Chat</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Messages</h1>
         <div className="flex items-center gap-2">
           {/* AI Chat Button */}
           <Button
@@ -33,12 +33,12 @@ const ChatListHeader = ({ onSearch }) => {
             className="h-8 w-8"
             onClick={handleAIChat}
             disabled={isAIChatLoading}
-            title="Chat with AI"
+            title="Chat with Synapse AI"
           >
             {isAIChatLoading ? (
               <Spinner className="h-4 w-4" />
             ) : (
-              <Bot className="h-5! w-5! stroke-1! text-purple-600" />
+              <Bot className="h-5! w-5! stroke-1! text-violet-500" />
             )}
           </Button>
 
@@ -49,7 +49,7 @@ const ChatListHeader = ({ onSearch }) => {
       <div>
         <InputGroup className="bg-background text-sm">
           <InputGroupInput
-            placeholder="Search..."
+            placeholder="Search conversations..."
             onChange={(e) => onSearch(e.target.value)}
           />
           <InputGroupAddon>

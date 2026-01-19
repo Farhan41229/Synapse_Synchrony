@@ -20,7 +20,7 @@ const VoiceMessage = ({ voiceUrl, duration, transcription, isSender }) => {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(() => { });
     }
     setIsPlaying(!isPlaying);
   };
@@ -57,13 +57,12 @@ const VoiceMessage = ({ voiceUrl, duration, transcription, isSender }) => {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`flex flex-col gap-1 min-w-[200px] rounded-lg p-2 ${
-      isSender ? 'bg-primary text-primary-foreground' : 'bg-sidebar-accent'
-    }`}>
+    <div className={`flex flex-col gap-1 min-w-[200px] rounded-lg p-2 ${isSender ? 'bg-primary text-primary-foreground' : 'bg-sidebar-accent'
+      }`}>
       {/* Audio Player Row */}
       <div className="flex items-center gap-2">
         <audio ref={audioRef} src={voiceUrl} preload="metadata" />
-        
+
         <Button
           size="icon"
           variant="ghost"
@@ -80,7 +79,7 @@ const VoiceMessage = ({ voiceUrl, duration, transcription, isSender }) => {
         <div className="flex-1 min-w-0">
           <div className="relative h-8 flex items-center">
             <div className="w-full h-1 bg-current/20 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-current transition-all duration-100"
                 style={{ width: `${progress}%` }}
               />
@@ -97,17 +96,17 @@ const VoiceMessage = ({ voiceUrl, duration, transcription, isSender }) => {
       {transcription && (
         <div className="border-t border-current/10 pt-1 mt-1">
           {!showTranscript ? (
-            <button 
+            <button
               onClick={() => setShowTranscript(true)}
               className="text-[10px] font-medium opacity-70 hover:opacity-100 flex items-center gap-1 w-full"
             >
               <span className="bg-current/10 px-1.5 py-0.5 rounded">Aa</span>
-              Show Transcript
+              View Transcript
             </button>
           ) : (
             <div className="text-xs space-y-1 animate-in fade-in slide-in-from-top-1">
               <p className="opacity-90 leading-relaxed">{transcription}</p>
-              <button 
+              <button
                 onClick={() => setShowTranscript(false)}
                 className="text-[10px] opacity-60 hover:opacity-100"
               >

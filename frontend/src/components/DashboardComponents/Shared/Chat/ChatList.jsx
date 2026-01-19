@@ -41,7 +41,6 @@ const ChatList = () => {
     if (!socket) return;
 
     const handleNewChat = (newChat) => {
-      console.log('Received new chat', newChat);
       addNewChat(newChat);
     };
 
@@ -56,7 +55,6 @@ const ChatList = () => {
     if (!socket) return;
 
     const handleChatUpdate = (data) => {
-      console.log('Received update on chat', data.lastMessage);
       updateChatLastMessage(data.chatId, data.lastMessage);
     };
 
@@ -82,8 +80,8 @@ const ChatList = () => {
               <Spinner className="w-7 h-7" />
             </div>
           ) : filteredChats?.length === 0 ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              {searchQuery ? 'No chat found' : 'No chats created'}
+            <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+              {searchQuery ? 'No matching conversations found.' : 'No conversations yet.'}
             </div>
           ) : (
             filteredChats?.map((chat) => (

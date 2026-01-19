@@ -21,7 +21,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
-// ✅ CRITICAL FIX: Store client globally to prevent duplicates
+// Store client globally to prevent duplicate instantiation
 let globalVideoClient = null;
 let globalUserId = null;
 
@@ -30,7 +30,7 @@ const VideoCallPage = () => {
   const [client, setClient] = useState(null);
   const [call, setCall] = useState(null);
   const [isConnecting, setIsConnecting] = useState(true);
-  const hasJoinedRef = useRef(false); // Prevent double joins
+  const hasJoinedRef = useRef(false);
 
   const { user } = useAuthStore();
 
@@ -43,30 +43,22 @@ const VideoCallPage = () => {
   useEffect(() => {
     const initCall = async () => {
       if (!tokenData?.token || !user || !callId) return;
-      if (hasJoinedRef.current) return; // Prevent double joins
+      if (hasJoinedRef.current) return;
 
       try {
-        console.log('Initializing Stream video client...');
         hasJoinedRef.current = true;
 
-        // ✅ CRITICAL FIX: Reuse existing client if same user
         let videoClient;
 
         if (globalVideoClient && globalUserId === user._id) {
-          console.log('Reusing existing video client');
           videoClient = globalVideoClient;
         } else {
-          // Disconnect old client if different user
           if (globalVideoClient) {
-            console.log('Disconnecting old client (different user)');
             try {
               await globalVideoClient.disconnectUser();
-            } catch (e) {
-              console.error('Error disconnecting old client:', e);
-            }
+            } catch (_e) { }
           }
 
-          console.log('Creating new video client');
           const streamUser = {
             id: user._id,
             name: user.name,
@@ -86,15 +78,11 @@ const VideoCallPage = () => {
         // Join the call
         const callInstance = videoClient.call('default', callId);
 
-        console.log('Joining call:', callId);
         await callInstance.join({ create: true });
-
-        console.log('Joined call successfully');
 
         setClient(videoClient);
         setCall(callInstance);
       } catch (error) {
-        console.error('Error joining call:', error);
         toast.error('Could not join the call. Please try again.');
         hasJoinedRef.current = false;
       } finally {
@@ -104,21 +92,16 @@ const VideoCallPage = () => {
 
     initCall();
 
-    // ✅ Cleanup: Leave call but DON'T disconnect client (we'll reuse it)
+    // Leave call on unmount; keep client alive for reuse
     return () => {
-      console.log('Component unmounting, leaving call...');
       if (call) {
-        call
-          .leave()
-          .then(() => console.log('Left call successfully'))
-          .catch((err) => console.error('Error leaving call:', err));
+        call.leave().catch(() => { });
       }
-      // DON'T disconnect the client here - we'll reuse it
       hasJoinedRef.current = false;
     };
   }, [tokenData, user, callId]);
 
-  // Inject CSS to fix Stream components
+  // Inject Stream control bar overrides
   useEffect(() => {
     const styleEl = document.createElement('style');
     styleEl.innerHTML = `
@@ -193,7 +176,7 @@ const VideoCallPage = () => {
         <div style={{ textAlign: 'center' }}>
           <Spinner className="w-12 h-12 mx-auto mb-4" />
           <p style={{ color: 'white', fontSize: '18px' }}>
-            Connecting to call...
+            Connecting to video call...
           </p>
         </div>
       </div>

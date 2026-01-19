@@ -56,7 +56,6 @@ import {
 import { useAuthStore } from '@/store/authStore';
 
 const role = 'User';
-const Name = 'Farhan Tahsin Khan';
 const items = [
   {
     title: 'Home',
@@ -76,8 +75,8 @@ const items = [
 ];
 const UserSidebar = () => {
   const { user } = useAuthStore();
-  // console.log(user);
   const photourl = user?.avatar;
+  const displayName = user?.name || 'User';
   return (
     <Sidebar collapsible="icon" className="z-20">
       <SidebarHeader className="">
@@ -121,10 +120,10 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        {/* Wellness/Medilink Group */}
+
+        {/* Wellness Group */}
         <SidebarGroup>
-          <SidebarGroupLabel>Medilink Wellness</SidebarGroupLabel>
+          <SidebarGroupLabel>Wellness</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -162,7 +161,7 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         {/* Health Assessment Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Health Assessment</SidebarGroupLabel>
@@ -179,7 +178,7 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         {/* Books Group */}
         {/* <SidebarGroup>
           <SidebarGroupLabel>Books</SidebarGroupLabel>
@@ -272,7 +271,7 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup> */}
-        {/* navigation Group */}
+        {/* Navigation Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
 
@@ -371,7 +370,7 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         {/* Schedule Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Schedule</SidebarGroupLabel>
@@ -396,8 +395,8 @@ const UserSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        {/* Event Group */}
+
+        {/* Events Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Events</SidebarGroupLabel>
 
@@ -429,7 +428,7 @@ const UserSidebar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuSubButton>
-                  <User2 /> {Name?.slice(0, 19)}{' '}
+                  <User2 /> {displayName?.slice(0, 19)}{' '}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuSubButton>
               </DropdownMenuTrigger>
@@ -437,7 +436,7 @@ const UserSidebar = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard/profile">Account</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>Setting</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

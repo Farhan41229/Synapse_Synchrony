@@ -8,8 +8,8 @@ import {
 import Logo from '../Logo/Logo';
 
 const EmptyState = ({
-  title = 'No chat selected',
-  description = 'Pick a chat or start a new one...',
+  title = 'No conversation selected',
+  description = 'Choose a contact or start a new conversation to begin.',
 }) => {
   return (
     <Empty

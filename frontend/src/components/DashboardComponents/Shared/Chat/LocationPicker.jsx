@@ -18,18 +18,15 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
   const { getLocationWithAddress, isLoading, error, locationData, reset } = useLocation();
   const { sendLocationMessage } = useChat();
   const { user } = useAuthStore();
-  
+
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  // Fetch location when dialog opens
+  // Fetch location when dialog opens; clean up on close
   useEffect(() => {
     if (isOpen) {
-      getLocationWithAddress().catch((err) => {
-        console.error('Location error:', err);
-      });
+      getLocationWithAddress().catch(() => { });
     } else {
-      // Reset when dialog closes
       reset();
       setMessage('');
     }
@@ -53,8 +50,8 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
       });
 
       onClose();
-    } catch (error) {
-      console.error('Error sharing location:', error);
+    } catch (_err) {
+      // Error handled silently; toast can be wired here if needed
     } finally {
       setIsSending(false);
     }
@@ -62,9 +59,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
 
   const handleRetry = () => {
     reset();
-    getLocationWithAddress().catch((err) => {
-      console.error('Location error:', err);
-    });
+    getLocationWithAddress().catch(() => { });
   };
 
   return (
@@ -76,7 +71,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
             Share Location
           </DialogTitle>
           <DialogDescription>
-            Share your current location with this chat
+            Share your current location with this conversation
           </DialogDescription>
         </DialogHeader>
 
@@ -85,7 +80,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-8 space-y-3">
               <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Getting your location...</p>
+              <p className="text-sm text-muted-foreground">Detecting your location...</p>
             </div>
           )}
 
@@ -96,7 +91,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
                 <AlertCircle className="size-6 text-destructive" />
               </div>
               <div className="text-center space-y-2">
-                <p className="text-sm font-medium text-destructive">Location Error</p>
+                <p className="text-sm font-medium text-destructive">Location Unavailable</p>
                 <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
               </div>
               <Button onClick={handleRetry} variant="outline" size="sm">
@@ -108,7 +103,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
           {/* Success State */}
           {locationData && !isLoading && !error && (
             <div className="space-y-4">
-              {/* Location Info */}
+              {/* Location Info Card */}
               <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
                 <div className="flex items-start gap-2">
                   <MapPin className="size-4 mt-0.5 text-primary shrink-0" />
@@ -121,7 +116,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pt-2 border-t">
                   <p className="text-xs text-muted-foreground font-mono">
                     {locationData.latitude.toFixed(6)}, {locationData.longitude.toFixed(6)}
@@ -134,7 +129,7 @@ const LocationPicker = ({ chatId, replyTo, isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Optional Message */}
+              {/* Optional message field */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Add a message (optional)

@@ -25,7 +25,7 @@ export const NewChatPopover = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [groupName, setGroupName] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // Added search query state
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
 
   const [loadingUserId, setLoadingUserId] = useState(null);
@@ -33,8 +33,6 @@ export const NewChatPopover = memo(() => {
   useEffect(() => {
     fetchAllUsers();
   }, [fetchAllUsers]);
-
-  console.log(users);
 
   const toggleUserSelection = (id) => {
     setSelectedUsers((prev) =>
@@ -49,7 +47,7 @@ export const NewChatPopover = memo(() => {
   const resetState = () => {
     setIsGroupMode(false);
     setGroupName('');
-    setSearchQuery(''); // Reset search query
+    setSearchQuery('');
     setSelectedUsers([]);
   };
 
@@ -65,7 +63,6 @@ export const NewChatPopover = memo(() => {
       participants: selectedUsers,
       groupName: groupName,
     });
-    console.log('Here is the bothersome Response: ', response);
     setIsOpen(false);
     resetState();
     navigate(`/dashboard/chat/${response?._id}`);
@@ -88,7 +85,7 @@ export const NewChatPopover = memo(() => {
     }
   };
 
-  // Filter users based on search query
+  // Filter users by search query
   const filteredUsers = users?.filter((user) =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -132,7 +129,7 @@ export const NewChatPopover = memo(() => {
                   ? setGroupName(e.target.value)
                   : setSearchQuery(e.target.value)
               }
-              placeholder={isGroupMode ? 'Enter group name' : 'Search name'}
+              placeholder={isGroupMode ? 'Enter group name' : 'Search users...'}
             />
             <InputGroupAddon>
               {isGroupMode ? <UsersIcon /> : <Search />}
@@ -150,10 +147,10 @@ export const NewChatPopover = memo(() => {
               <Spinner className="w-6 h-6" />
             </div>
           ) : filteredUsers && filteredUsers?.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
+            <div className="text-center text-muted-foreground py-8 text-sm">
               {searchQuery
                 ? 'No users found matching your search'
-                : 'No users found'}
+                : 'No users available'}
             </div>
           ) : !isGroupMode ? (
             <>
@@ -211,7 +208,7 @@ const UserAvatar = memo(({ user }) => (
     <div className="flex-1 min-w-0">
       <h5 className="text-[13.5px] font-medium truncate">{user.name}</h5>
       <p className="text-xs text-muted-foreground">
-        Hey there! I'm using Synapse
+        Active on Synapse Synchrony
       </p>
     </div>
   </>

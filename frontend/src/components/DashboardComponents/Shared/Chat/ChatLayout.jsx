@@ -12,12 +12,12 @@ const ChatLayout = () => {
       {/* Chat List Sidebar */}
       <ChatList />
 
-      {/* Chat Content Area - SingleChat will render here */}
+      {/* Chat Content Area */}
       <div className="flex-1 flex items-center justify-center bg-linear-to-br from-background via-background to-muted/20">
         {!isChatSelected ? (
-          // Enhanced Empty State
+          // Welcome / Empty State
           <div className="max-w-2xl mx-auto px-8 text-center space-y-8">
-            {/* Logo/Icon Section */}
+            {/* Icon Section */}
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
               <div className="relative w-24 h-24 mx-auto bg-linear-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center shadow-2xl">
@@ -31,7 +31,7 @@ const ChatLayout = () => {
             {/* Heading */}
             <div className="space-y-3">
               <h1 className="text-4xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Welcome to Synapse Chat
+                Synapse Messaging
               </h1>
               <p className="text-lg text-muted-foreground max-w-md mx-auto">
                 Select a conversation from the sidebar or start a new chat to
@@ -47,7 +47,7 @@ const ChatLayout = () => {
                 </div>
                 <h3 className="font-semibold mb-1 text-sm">AI Assistant</h3>
                 <p className="text-xs text-muted-foreground">
-                  Chat with Whoop AI
+                  Chat with Synapse AI
                 </p>
               </div>
 
@@ -76,7 +76,6 @@ const ChatLayout = () => {
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-4">
               <button
                 onClick={() => {
-                  // This will be handled by the NewChatPopover in ChatList
                   document.querySelector('[data-new-chat-trigger]')?.click();
                 }}
                 className="group inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105"
@@ -104,13 +103,13 @@ const ChatLayout = () => {
                   💬 Share images & files
                 </span>
                 <span className="px-3 py-1.5 bg-muted/50 rounded-full text-xs text-muted-foreground border border-border">
-                  🤖 Ask Whoop AI anything
+                  🤖 Ask Synapse AI anything
                 </span>
                 <span className="px-3 py-1.5 bg-muted/50 rounded-full text-xs text-muted-foreground border border-border">
                   ⚡ Real-time updates
                 </span>
                 <span className="px-3 py-1.5 bg-muted/50 rounded-full text-xs text-muted-foreground border border-border">
-                  🔒 Secure & encrypted
+                  🔒 Secure & private
                 </span>
               </div>
             </div>

@@ -19,31 +19,31 @@ const VoiceRecorder = ({ chatId, replyTo, onCancel }) => {
 
   const { sendVoiceMessage } = useChat();
   const { user } = useAuthStore();
-  
+
   // Preview player state
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [previewProgress, setPreviewProgress] = useState(0);
   const previewAudioRef = useRef(null);
-  
-  // Waveform animation state
+
+  // Waveform animation bars
   const [waveformHeights, setWaveformHeights] = useState(
     Array(30).fill(0).map(() => 20 + Math.random() * 60)
   );
 
-  // Auto-start recording when component mounts
+  // Auto-start recording on mount
   useEffect(() => {
     startRecording();
   }, []);
 
-  // Animate waveform bars while recording
+  // Animate waveform while recording
   useEffect(() => {
     if (!isRecording) return;
 
     const interval = setInterval(() => {
-      setWaveformHeights(prev => 
+      setWaveformHeights(prev =>
         prev.map(() => 20 + Math.random() * 60)
       );
-    }, 150); // Update every 150ms for smooth animation
+    }, 150);
 
     return () => clearInterval(interval);
   }, [isRecording]);
@@ -92,7 +92,7 @@ const VoiceRecorder = ({ chatId, replyTo, onCancel }) => {
 
   const handleDelete = () => {
     resetRecording();
-    // Restart recording immediately after delete
+    // Restart fresh recording after delete
     setTimeout(() => {
       startRecording();
     }, 100);
@@ -105,7 +105,7 @@ const VoiceRecorder = ({ chatId, replyTo, onCancel }) => {
       previewAudioRef.current.pause();
       setIsPreviewPlaying(false);
     } else {
-      previewAudioRef.current.play();
+      previewAudioRef.current.play().catch(() => { });
       setIsPreviewPlaying(true);
     }
   };
@@ -120,19 +120,19 @@ const VoiceRecorder = ({ chatId, replyTo, onCancel }) => {
         </div>
       )}
 
-      {/* Preview (after recording) - Custom player */}
+      {/* Preview after recording */}
       {!isRecording && audioUrl && (
         <>
-          <audio 
-            ref={previewAudioRef} 
-            src={audioUrl} 
+          <audio
+            ref={previewAudioRef}
+            src={audioUrl}
             onEnded={() => {
               setIsPreviewPlaying(false);
               setPreviewProgress(0);
             }}
             className="hidden"
           />
-          
+
           <div className="flex items-center gap-2 flex-1">
             <Button
               size="icon"
@@ -146,20 +146,20 @@ const VoiceRecorder = ({ chatId, replyTo, onCancel }) => {
                 <Play className="size-4 ml-0.5" />
               )}
             </Button>
-            
+
             <div className="flex-1 h-1 bg-sidebar-muted/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full transition-all duration-100" 
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-100"
                 style={{ width: `${previewProgress}%` }}
               />
             </div>
-            
+
             <span className="text-xs text-sidebar-muted">{formatTime(recordingTime)}</span>
           </div>
         </>
       )}
 
-      {/* Recording in progress - WhatsApp-style waveform animation */}
+      {/* Recording waveform animation */}
       {isRecording && (
         <div className="flex-1 flex items-center justify-center gap-[3px] h-10">
           {waveformHeights.map((height, i) => (

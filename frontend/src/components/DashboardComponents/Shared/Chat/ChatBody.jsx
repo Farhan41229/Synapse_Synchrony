@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useChat } from '@/hooks/use-chat';
 import { useSocket } from '@/hooks/use-socket';
 import ChatBodyMessage from './ChatBodyMessage';
@@ -7,6 +7,10 @@ const ChatBody = ({ chatId, messages, onReply }) => {
   const { socket } = useSocket();
   const { addNewMessage } = useChat();
   const bottomRef = useRef(null);
+
+  const scrollToBottom = useCallback(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     if (!chatId) return;
@@ -22,10 +26,8 @@ const ChatBody = ({ chatId, messages, onReply }) => {
 
   useEffect(() => {
     if (!messages.length) return;
-    bottomRef.current?.scrollIntoView({
-      behavior: 'smooth',
-    });
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col px-3 py-2">

@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
 const ChatReplyBar = ({ replyTo, currentUserId, onCancel }) => {
-  const replySenderName =
-    replyTo?.sender?._id === currentUserId ? 'You' : replyTo?.sender?.name;
+  const isOwnMessage = replyTo?.sender?._id === currentUserId;
+  const replySenderName = isOwnMessage ? 'You' : (replyTo?.sender?.name || 'Unknown');
 
   return (
     <div
@@ -22,7 +22,7 @@ const ChatReplyBar = ({ replyTo, currentUserId, onCancel }) => {
                 Replying to {replySenderName}
               </p>
               <p className="text-sm text-muted-foreground truncate">
-                {replyTo?.content || (replyTo?.image ? '📷 Photo' : '')}
+                {replyTo?.content || (replyTo?.image ? '📷 Photo' : replyTo?.voice ? '🎤 Voice' : '')}
               </p>
             </div>
           </div>
@@ -31,7 +31,7 @@ const ChatReplyBar = ({ replyTo, currentUserId, onCancel }) => {
           variant="ghost"
           size="icon"
           onClick={onCancel}
-          className="h-8 w-8 rounded-full"
+          className="h-8 w-8 rounded-full hover:bg-destructive/10"
         >
           <X className="h-4 w-4" />
         </Button>
