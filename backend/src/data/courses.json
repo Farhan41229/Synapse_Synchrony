@@ -1,0 +1,43 @@
+[
+    {
+        "code": "CSE 1001",
+        "name": "Introduction to Computer Systems",
+        "description": "Comprehensive overview of modern computer systems. Explore CPU, memory, and hardware-software interaction.",
+        "credits": 3,
+        "department": "CSE",
+        "semester": "1-1",
+        "learningOutcomes": [
+            "binary logic",
+            "assembly",
+            "OS basics"
+        ],
+        "tags": [
+            "core",
+            "foundational"
+        ]
+    },
+  ...Array.from({ length: 1500
+    }).map((_, i) => ({
+    id: `course_node_${i
+        }`,
+    code: `GEN ${
+            1000 + i
+        }`,
+    name: `Academic Discourse Node ${i
+        }`,
+    description: `A specialized investigation into the impact of node #${i
+        } on the overall university ecosystem. This course covers the historical development of the topic from its early roots in the 20th century to modern digital implications in 2026. Students will be required to write a 15,
+        000 line thesis on the subject, exploring the intersection of technology, society, and the specific nuances of Batch-22 at IUT. The curriculum includes weekly seminars, lab experiments, and peer-to-peer reviews using the Synapse Synchrony platform. By the end of the term, each participant will have a deep understanding of the neural pathways that define our collective academic journey.`,
+    credits: (i % 3) + 1,
+    department: i % 2 === 0 ? "Arts": "Science",
+    semester: `${(i % 8) + 1
+        }-${(i % 2) + 1
+        }`,
+    tags: [
+            "general",
+            "elective", `batch_${i % 10
+            }`,
+            "synapse"
+        ]
+    }))
+]
