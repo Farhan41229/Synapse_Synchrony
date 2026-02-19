@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     User,
@@ -23,19 +23,33 @@ import {
     Smartphone,
     Save,
     X,
-    Loader2
+    Loader2,
+    Sparkles,
+    Activity,
+    Wind,
+    Flame,
+    Cpu,
+    Target,
+    Zap,
+    ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import moment from 'moment';
+import { Button } from '@/components/ui/button';
 
+/**
+ * @component ProfilePage
+ * @description Advanced Neural Identity Manifold.
+ * Manages user synaptic profile, security nodes, and global sector clearance.
+ */
 const ProfilePage = () => {
     const queryClient = useQueryClient();
-    const [editMode, setEditMode] = useState(false);
-    const [activeTab, setActiveTab] = useState('account');
+    const [isCalibrating, setIsCalibrating] = useState(false);
+    const [activeSector, setActiveSector] = useState('identity');
 
-    // Form states
-    const [profileData, setProfileData] = useState({
+    // --- FORM BUFFER STATE ---
+    const [buffer, setBuffer] = useState({
         name: '',
         bio: '',
         website: '',
@@ -44,32 +58,33 @@ const ProfilePage = () => {
         linkedin: ''
     });
 
-    // Queries
-    const { data: user, isLoading: userLoading } = useQuery({
-        queryKey: ['profile'],
+    // --- NEURAL DATA SYNC ---
+    const { data: profile, isLoading } = useQuery({
+        queryKey: ['neural-identity-v5'],
         queryFn: async () => {
             const res = await fetch('/api/profile', {
                 headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
             });
+            if (!res.ok) throw new Error('Identity Link Fragmented');
             return res.json();
         }
     });
 
     useEffect(() => {
-        if (user?.data) {
-            setProfileData({
-                name: user.data.name || '',
-                bio: user.data.bio || '',
-                website: user.data.website || '',
-                github: user.data.github || '',
-                twitter: user.data.twitter || '',
-                linkedin: user.data.linkedin || ''
+        if (profile?.data) {
+            setBuffer({
+                name: profile.data.name || '',
+                bio: profile.data.bio || '',
+                website: profile.data.website || '',
+                github: profile.data.github || '',
+                twitter: profile.data.twitter || '',
+                linkedin: profile.data.linkedin || ''
             });
         }
-    }, [user]);
+    }, [profile]);
 
-    // Mutations
-    const updateProfileMutation = useMutation({
+    // --- CALIBRATION MUTATION ---
+    const calibrateMutation = useMutation({
         mutationFn: async (payload) => {
             const res = await fetch('/api/profile', {
                 method: 'PUT',
@@ -82,182 +97,212 @@ const ProfilePage = () => {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['profile']);
-            setEditMode(false);
-            toast.success('Your profile has been updated!');
+            queryClient.invalidateQueries(['neural-identity-v5']);
+            setIsCalibrating(false);
+            toast.success('Identity Calibration Complete');
         }
     });
 
-    if (userLoading) {
+    if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-gray-950">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+            <div className="flex h-screen items-center justify-center bg-gray-950 overflow-hidden relative">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#4f46e510_0%,_transparent_70%)] animate-pulse"></div>
+                <div className="relative group text-center space-y-10">
+                    <div className="h-24 w-24 border-8 border-gray-900 border-t-indigo-600 rounded-full animate-spin mx-auto flex items-center justify-center shadow-[0_0_80px_rgba(79,70,229,0.2)]">
+                        <Cpu size={32} className="text-indigo-400" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-[1em] text-gray-800 animate-pulse">Synchronizing Neural Identity...</p>
+                </div>
             </div>
         );
     }
 
-    const { data: userData } = user;
+    const userData = profile.data;
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white selection:bg-indigo-500/30">
-            {/* Top Branding Section */}
-            <div className="h-48 w-full bg-gradient-to-r from-indigo-900 to-purple-900 shadow-xl overflow-hidden relative">
-                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+        <div className="min-h-screen bg-gray-950 text-white selection:bg-indigo-500/30 pb-40 font-sans">
+            {/* Sector Header Matrix */}
+            <div className="h-72 w-full bg-black relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-black opacity-80"></div>
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '60px 60px' }}></div>
+                <div className="absolute -bottom-20 -right-20 h-96 w-96 bg-indigo-500/10 blur-[150px] group-hover:bg-indigo-500/20 transition-all duration-1000"></div>
+                <div className="h-full w-full flex items-center justify-center p-24 opacity-5 rotate-12 group-hover:rotate-0 transition-transform duration-1000 scale-150">
+                    <Activity size={400} />
+                </div>
             </div>
 
-            <div className="mx-auto max-w-6xl px-10">
-                {/* Profile Header Card */}
-                <div className="relative -mt-24 mb-12 flex flex-col items-center gap-8 rounded-[3rem] border border-gray-900 bg-gray-950/80 p-10 backdrop-blur-3xl shadow-2xl md:flex-row md:items-end md:justify-between group">
-                    <div className="flex flex-col items-center gap-8 md:flex-row md:items-end">
-                        {/* Avatar container */}
-                        <div className="relative h-44 w-44 shrink-0 rounded-[2.5rem] border-4 border-gray-950 bg-gray-900 shadow-2xl overflow-hidden ring-4 ring-indigo-500/20 group">
-                            <img src={userData.avatar || "/default-avatar.png"} alt={userData.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100 cursor-pointer">
-                                <Camera className="text-white" size={32} />
+            <div className="mx-auto max-w-7xl px-8 relative -mt-32">
+                {/* Identity Cluster Node */}
+                <header className="mb-20 flex flex-col items-center gap-12 rounded-[4rem] border border-gray-900 bg-gray-950/60 p-16 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,0,0,0.8)] md:flex-row md:items-end md:justify-between group">
+                    <div className="flex flex-col items-center gap-12 md:flex-row md:items-end">
+                        {/* Biometric Portrait */}
+                        <div className="relative h-56 w-56 shrink-0 rounded-[3.5rem] border-8 border-gray-950 bg-gray-900 shadow-3xl overflow-hidden ring-4 ring-indigo-500/20 group/avatar">
+                            <img src={userData.avatar || "/default-avatar.png"} alt={userData.name} className="h-full w-full object-cover transition duration-1000 group-hover/avatar:scale-125 grayscale hover:grayscale-0" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-indigo-600/40 backdrop-blur-sm opacity-0 transition-all group-hover/avatar:opacity-100 cursor-pointer">
+                                <Camera className="text-white animate-pulse" size={48} />
                             </div>
                         </div>
 
-                        <div className="text-center md:text-left">
-                            <h1 className="text-5xl font-black tracking-tighter uppercase italic text-white flex items-center gap-3">
-                                {userData.name}
-                                {userData.isEmailVerified && <ShieldCheck size={32} className="text-indigo-400" />}
-                            </h1>
-                            <p className="mt-2 text-xl font-bold text-gray-400 capitalize">{userData.role || "Scholar"} • {userData.email}</p>
-                            <div className="mt-4 flex flex-wrap justify-center gap-3 md:justify-start">
-                                <span className="rounded-xl border border-gray-800 bg-gray-950 px-3 py-1 text-xs font-black uppercase text-gray-500 tracking-widest">Joined {moment(userData.createdAt).format('MMMM YYYY')}</span>
-                                <span className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-3 py-1 text-xs font-black uppercase text-indigo-400 tracking-widest">Global Rank #120</span>
+                        <div className="text-center md:text-left space-y-4">
+                            <div className="flex items-center gap-4 justify-center md:justify-start">
+                                <h1 className="text-7xl font-black tracking-tighter uppercase italic text-white flex items-center gap-4 leading-none">
+                                    {userData.name}
+                                </h1>
+                                {userData.isEmailVerified && <ShieldCheck size={40} className="text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />}
+                            </div>
+                            <p className="text-2xl font-bold text-gray-700 italic border-l-4 border-gray-900 pl-8">{userData.role || "Synaptic Architect"} • <span className="text-gray-500 font-medium">{userData.email}</span></p>
+                            <div className="flex flex-wrap justify-center gap-6 md:justify-start pt-4">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-800 mb-1">Sector Entry</span>
+                                    <span className="text-sm font-black text-white italic">{moment(userData.createdAt).format('MMMM.YYYY')}</span>
+                                </div>
+                                <div className="flex flex-col border-l border-gray-900 pl-6">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-800 mb-1">Pulse Rank</span>
+                                    <span className="text-sm font-black text-indigo-400 italic">Global-Nexus #0xA94</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 mb-2">
-                        {editMode ? (
-                            <>
-                                <button
-                                    onClick={() => setEditMode(false)}
-                                    className="flex items-center gap-2 rounded-2xl bg-gray-900 px-6 py-3 font-black uppercase text-gray-400 tracking-widest hover:text-white transition"
+                    <div className="flex gap-6 pb-4 relative z-10">
+                        {isCalibrating ? (
+                            <div className="flex gap-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsCalibrating(false)}
+                                    className="rounded-2xl border-gray-800 bg-gray-950 px-10 py-8 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white"
                                 >
-                                    <X size={18} /> Cancel
-                                </button>
-                                <button
-                                    onClick={() => updateProfileMutation.mutate(profileData)}
-                                    className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 font-black uppercase text-white tracking-widest hover:bg-indigo-700 transition shadow-xl shadow-indigo-900/40"
+                                    <X size={20} /> Abort
+                                </Button>
+                                <Button
+                                    onClick={() => calibrateMutation.mutate(buffer)}
+                                    className="rounded-2xl bg-indigo-600 px-10 py-8 text-xs font-black uppercase tracking-widest text-white shadow-3xl hover:bg-indigo-500"
                                 >
-                                    <Save size={18} /> Save Changes
-                                </button>
-                            </>
+                                    <Save size={20} /> Finalize Calibration
+                                </Button>
+                            </div>
                         ) : (
-                            <button
-                                onClick={() => setEditMode(true)}
-                                className="flex items-center gap-2 rounded-2xl bg-white px-8 py-3 font-black uppercase italic text-black hover:bg-indigo-500 hover:text-white transition shadow-xl"
+                            <Button
+                                onClick={() => setIsCalibrating(true)}
+                                className="rounded-[2.5rem] bg-white text-black px-12 py-10 text-xs font-black uppercase italic tracking-[0.2em] shadow-3xl hover:bg-indigo-500 hover:text-white transition-all scale-110"
                             >
-                                <Settings size={18} /> Edit Core Systems
-                            </button>
+                                <Settings size={20} /> Calibrate Core
+                            </Button>
                         )}
                     </div>
-                </div>
+                </header>
 
-                {/* Sub Navigation */}
-                <div className="flex flex-col gap-10 lg:flex-row">
-                    {/* Sidebar Nav */}
-                    <div className="lg:w-1/4">
-                        <div className="sticky top-32 space-y-2 rounded-3xl bg-gray-900/40 p-3 border border-gray-900">
-                            {[
-                                { id: 'account', label: 'Primary Account', icon: User },
-                                { id: 'security', label: 'Security & Auth', icon: Shield },
-                                { id: 'notifications', label: 'Global Notifications', icon: Bell },
-                                { id: 'privacy', label: 'Data & Privacy', icon: Eye },
-                                { id: 'integrations', label: 'Synapse Integrations', icon: Smartphone }
-                            ].map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setActiveTab(item.id)}
-                                    className={cn(
-                                        "flex w-full items-center gap-4 rounded-2xl p-4 text-sm font-black uppercase tracking-widest transition-all",
-                                        activeTab === item.id ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20" : "text-gray-500 hover:bg-gray-800 hover:text-gray-300"
-                                    )}
-                                >
-                                    <item.icon size={20} />
-                                    {item.label}
-                                </button>
-                            ))}
-                            <button className="flex w-full items-center gap-4 rounded-2xl p-4 text-sm font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition mt-4">
-                                <LogOut size={20} />
-                                Terminate Session
-                            </button>
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+                    {/* Lateral Navigation Terminal */}
+                    <aside className="lg:col-span-3 space-y-20">
+                        <section className="bg-gray-900/10 rounded-[3.5rem] border border-gray-900 p-8 shadow-3xl">
+                            <h3 className="text-[10px] font-black text-gray-800 uppercase tracking-[0.8em] text-center mb-10 leading-none">System_Nodes</h3>
+                            <nav className="space-y-4">
+                                {[
+                                    { id: 'identity', label: 'Identity Protocol', icon: User },
+                                    { id: 'security', label: 'Guardian Shell', icon: Shield },
+                                    { id: 'telemetry', label: 'Alert Synapses', icon: Bell },
+                                    { id: 'manuscript', label: 'Data Registry', icon: IdCard }
+                                ].map((node) => (
+                                    <button
+                                        key={node.id}
+                                        onClick={() => setActiveSector(node.id)}
+                                        className={cn(
+                                            "flex w-full items-center justify-between rounded-2xl p-6 text-xs font-black uppercase tracking-[0.2em] transition-all italic border border-transparent",
+                                            activeSector === node.id ? "bg-indigo-600 text-white shadow-3xl scale-105" : "text-gray-700 hover:text-white hover:bg-white/5"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <node.icon size={20} />
+                                            {node.label}
+                                        </div>
+                                    </button>
+                                ))}
+                            </nav>
+                            <Button className="w-full mt-10 rounded-2xl bg-rose-600/10 text-rose-500 border border-rose-600/20 py-8 text-xs font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all">
+                                <LogOut size={20} /> Terminate
+                            </Button>
+                        </section>
 
-                    {/* Content Section */}
-                    <div className="lg:w-3/4">
-                        {activeTab === 'account' && (
-                            <div className="space-y-10 animate-fade-in">
-                                {/* Bio and Basics */}
-                                <section className="rounded-[3rem] border border-gray-900 bg-gray-900/20 p-10 backdrop-blur-sm">
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 italic text-white flex items-center gap-3">
-                                        <IdCard size={28} className="text-indigo-400" />
-                                        Professional Manuscript
+                        <section className="rounded-[3rem] bg-gradient-to-br from-indigo-950/40 via-black to-transparent p-12 border border-gray-900 shadow-3xl">
+                            <Zap size={48} className="text-indigo-500 mb-10 animate-pulse" />
+                            <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-4">Neural Health</h4>
+                            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest leading-relaxed">Identity coherence verified. Encryption level: Omega-7.</p>
+                            <div className="h-1.5 w-full bg-gray-950 rounded-full overflow-hidden border border-gray-800 mt-8">
+                                <div className="h-full bg-indigo-500 w-[98%] shadow-[0_0_10px_#6366f1]"></div>
+                            </div>
+                        </section>
+                    </aside>
+
+                    {/* Primary Manifold Section */}
+                    <main className="lg:col-span-9 space-y-20">
+                        {activeSector === 'identity' && (
+                            <div className="space-y-16 animate-in fade-in slide-in-from-right-10 duration-1000">
+                                {/* Administrative Details */}
+                                <section className="rounded-[4rem] border border-gray-900 bg-gray-900/5 p-16 shadow-3xl">
+                                    <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-12 flex items-center gap-6">
+                                        <IdCard size={32} className="text-indigo-500" />
+                                        Administrative Abstract
                                     </h3>
-                                    <div className="space-y-8">
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 block mb-3">Biological Identifier (Name)</label>
-                                            {editMode ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-800">Biological Identifier</label>
+                                            {isCalibrating ? (
                                                 <input
                                                     type="text"
-                                                    value={profileData.name}
-                                                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                                                    className="w-full rounded-2xl bg-gray-950 border border-gray-800 p-4 text-white font-bold tracking-wide focus:border-indigo-500 outline-none transition"
+                                                    value={buffer.name}
+                                                    onChange={(e) => setBuffer({ ...buffer, name: e.target.value })}
+                                                    className="w-full rounded-2xl bg-black border border-indigo-500/30 p-6 text-white text-lg font-black italic uppercase italic tracking-tighter focus:border-indigo-500 outline-none transition shadow-inner"
                                                 />
                                             ) : (
-                                                <p className="text-xl font-bold text-gray-300">{userData.name}</p>
+                                                <p className="text-5xl font-black italic italic tracking-tighter text-white uppercase">{userData.name}</p>
                                             )}
                                         </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 block mb-3">Professional Abstract (Bio)</label>
-                                            {editMode ? (
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-800">Cerebral Abstract (Bio)</label>
+                                            {isCalibrating ? (
                                                 <textarea
                                                     rows={4}
-                                                    value={profileData.bio}
-                                                    onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                                                    placeholder="Briefly describe your academic focus..."
-                                                    className="w-full rounded-2xl bg-gray-950 border border-gray-800 p-4 text-white font-bold tracking-wide focus:border-indigo-500 outline-none transition resize-none"
+                                                    value={buffer.bio}
+                                                    onChange={(e) => setBuffer({ ...buffer, bio: e.target.value })}
+                                                    className="w-full rounded-2xl bg-black border border-indigo-500/30 p-6 text-white font-medium text-lg leading-relaxed italic focus:border-indigo-500 outline-none transition resize-none"
                                                 />
                                             ) : (
-                                                <p className="text-xl font-medium text-gray-400 leading-relaxed italic border-l-4 border-indigo-900 pl-6">
-                                                    {userData.bio || "No biography provided. A scholar of mystery."}
+                                                <p className="text-2xl font-medium text-gray-500 leading-relaxed italic border-l-8 border-gray-900 pl-10">
+                                                    {userData.bio || "No cerebral data indexed for this node."}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                 </section>
 
-                                {/* Contact and Links */}
-                                <section className="rounded-[3rem] border border-gray-900 bg-gray-900/20 p-10 backdrop-blur-sm">
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 italic text-white flex items-center gap-3">
-                                        <Globe size={28} className="text-indigo-400" />
-                                        Digital Connections
+                                {/* Neural Grid Connections */}
+                                <section className="rounded-[4rem] border border-gray-900 bg-black/40 p-16 shadow-3xl">
+                                    <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-16 flex items-center gap-6">
+                                        <Globe size={32} className="text-indigo-500" />
+                                        External Manifold Links
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                         {[
-                                            { key: 'github', icon: Github, label: 'GitHub Profile', color: 'hover:text-gray-200' },
-                                            { key: 'linkedin', icon: Linkedin, label: 'LinkedIn Professional', color: 'hover:text-blue-400' },
-                                            { key: 'twitter', icon: Twitter, label: 'Twitter (X)', color: 'hover:text-cyan-400' },
-                                            { key: 'website', icon: Globe, label: 'Personal Portfolio', color: 'hover:text-purple-400' }
+                                            { key: 'github', icon: Github, label: 'GitHub Repository', color: 'hover:text-white' },
+                                            { key: 'linkedin', icon: Linkedin, label: 'LinkedIn Manifold', color: 'hover:text-indigo-400' },
+                                            { key: 'twitter', icon: Twitter, label: 'Twitter Frequency', color: 'hover:text-cyan-400' },
+                                            { key: 'website', icon: Globe, label: 'Personal Node', color: 'hover:text-purple-400' }
                                         ].map(social => (
-                                            <div key={social.key}>
-                                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 block mb-3">{social.label}</label>
-                                                <div className="flex items-center gap-4 rounded-2xl bg-gray-950 p-4 border border-gray-800 focus-within:border-indigo-500/50 transition">
-                                                    <social.icon size={20} className="text-gray-500" />
-                                                    {editMode ? (
+                                            <div key={social.key} className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-800 block">{social.label}</label>
+                                                <div className="flex items-center gap-6 rounded-3xl bg-gray-950 p-6 border border-gray-900 focus-within:border-indigo-500/50 transition-all shadow-xl">
+                                                    <social.icon size={24} className="text-gray-700 group-hover:text-indigo-500 transition-colors" />
+                                                    {isCalibrating ? (
                                                         <input
                                                             type="text"
-                                                            value={profileData[social.key]}
-                                                            onChange={(e) => setProfileData({ ...profileData, [social.key]: e.target.value })}
-                                                            className="w-full bg-transparent border-none outline-none text-sm font-bold text-gray-300"
+                                                            value={buffer[social.key]}
+                                                            onChange={(e) => setBuffer({ ...buffer, [social.key]: e.target.value })}
+                                                            className="w-full bg-transparent border-none outline-none text-sm font-black text-gray-500 uppercase tracking-widest"
                                                         />
                                                     ) : (
-                                                        <a href={profileData[social.key]} target="_blank" rel="noreferrer" className={cn("text-sm font-bold text-gray-500 transition-colors uppercase tracking-widest", social.color)}>
-                                                            {profileData[social.key] ? profileData[social.key].split('/').pop() : "None Linked"}
+                                                        <a href={buffer[social.key]} target="_blank" rel="noreferrer" className={cn("text-xs font-black text-gray-700 transition-all uppercase tracking-widest italic group-hover:text-white", social.color)}>
+                                                            {buffer[social.key] ? buffer[social.key].split('/').pop() : "Fragmented"}
                                                         </a>
                                                     )}
                                                 </div>
@@ -268,81 +313,74 @@ const ProfilePage = () => {
                             </div>
                         )}
 
-                        {activeTab === 'security' && (
-                            <div className="space-y-10 animate-fade-in">
-                                <section className="rounded-[3rem] border border-gray-900 bg-gray-900/20 p-10 backdrop-blur-sm">
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 text-white">Encryption Vault</h3>
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between p-6 rounded-2xl bg-gray-950 border border-gray-800 hover:border-gray-700 transition">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500"><Lock size={20} /></div>
-                                                <div>
-                                                    <p className="text-sm font-black uppercase tracking-widest">Update Master Key</p>
-                                                    <p className="text-xs text-gray-600 font-bold uppercase">Last changed 4 months ago</p>
+                        {activeSector === 'security' && (
+                            <div className="space-y-16 animate-in fade-in slide-in-from-right-10 duration-1000">
+                                <section className="rounded-[4rem] border border-gray-900 bg-gray-900/5 p-16 shadow-3xl">
+                                    <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-16 text-white leading-none">Guardian Encryption</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                        <div className="p-10 rounded-[3rem] bg-gray-950 border border-gray-900 hover:border-indigo-500/40 transition-all group/key shadow-2xl">
+                                            <div className="mb-8 flex items-center justify-between">
+                                                <div className="h-16 w-16 rounded-2xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 shadow-3xl">
+                                                    <Lock size={32} />
+                                                </div>
+                                                <div className="flex flex-col text-right">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-800">Hash Stability</span>
+                                                    <span className="text-xs font-black text-emerald-500 uppercase">100% Secure</span>
                                                 </div>
                                             </div>
-                                            <button className="text-xs font-black uppercase tracking-widest text-indigo-400 hover:text-white transition">Update</button>
+                                            <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Master Key Rotation</h4>
+                                            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-10">Neural paths updated 124 days ago.</p>
+                                            <Button className="w-full rounded-2xl bg-white text-black py-8 text-xs font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">Rotat_Key</Button>
                                         </div>
-                                        <div className="flex items-center justify-between p-6 rounded-2xl bg-gray-950 border border-gray-800">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500"><Smartphone size={20} /></div>
-                                                <div>
-                                                    <p className="text-sm font-black uppercase tracking-widest">Two-Factor Auth</p>
-                                                    <p className="text-xs text-green-500 font-black uppercase">Currently Enabled</p>
+
+                                        <div className="p-10 rounded-[3rem] bg-gray-950 border border-gray-900 hover:border-indigo-500/40 transition-all group/key shadow-2xl">
+                                            <div className="mb-8 flex items-center justify-between">
+                                                <div className="h-16 w-16 rounded-2xl bg-emerald-600/10 flex items-center justify-center text-emerald-500 shadow-3xl">
+                                                    <Smartphone size={32} />
+                                                </div>
+                                                <div className="flex flex-col text-right">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-800">Status</span>
+                                                    <span className="text-xs font-black text-emerald-500 uppercase animate-pulse">Active</span>
                                                 </div>
                                             </div>
-                                            <button className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition">Disable</button>
+                                            <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Multi-Factor Sync</h4>
+                                            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-10">Verify login via biometric peripheral. </p>
+                                            <Button variant="outline" className="w-full rounded-2xl border-gray-900 text-gray-800 py-8 text-xs font-black uppercase tracking-widest hover:text-rose-500 hover:border-rose-500 transition-all">Disable_MFS</Button>
                                         </div>
                                     </div>
                                 </section>
                             </div>
                         )}
-
-                        {activeTab === 'notifications' && (
-                            <section className="rounded-[3rem] border border-gray-900 bg-gray-900/20 p-10 backdrop-blur-sm animate-fade-in">
-                                <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 text-white">Alert Synapses</h3>
-                                <div className="space-y-4">
-                                    {[
-                                        { label: 'New Direct Messages', desc: 'Alert when a fellow student initiates contact.' },
-                                        { label: 'Academic Announcements', desc: 'Critical alerts relative to your schedule.' },
-                                        { label: 'Wellness Checkups', desc: 'Gentle nudges to log your mental health state.' },
-                                        { label: 'Blog Interactions', desc: 'When someone likes or replies to your manuscript.' }
-                                    ].map((notif, i) => (
-                                        <div key={i} className="flex items-center justify-between p-6 rounded-3xl bg-gray-950/40 border border-gray-900 hover:bg-gray-950 transition">
-                                            <div>
-                                                <p className="text-sm font-black uppercase tracking-widest mb-1">{notif.label}</p>
-                                                <p className="text-xs text-gray-600 font-bold uppercase tracking-tighter">{notif.desc}</p>
-                                            </div>
-                                            <div className="h-4 w-10 rounded-full bg-indigo-600 relative cursor-pointer shadow-inner">
-                                                <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-white"></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                    </div>
+                    </main>
                 </div>
             </div>
 
-            {/* Danger Zone */}
-            <div className="mx-auto mt-20 max-w-6xl px-10">
-                <div className="rounded-[3rem] border-2 border-dashed border-red-900/30 bg-red-950/10 p-12 text-center md:text-left flex flex-col md:flex-row items-center gap-10">
-                    <div className="h-24 w-24 shrink-0 rounded-[2rem] bg-red-900/20 flex items-center justify-center text-red-500 border border-red-500/20 shadow-2xl">
-                        <Trash2 size={40} />
+            {/* Self-Destruct Protocol (Danger Zone) */}
+            <div className="mx-auto mt-40 max-w-7xl px-8">
+                <div className="rounded-[4rem] border-4 border-dashed border-rose-900/40 bg-rose-950/5 p-20 flex flex-col lg:flex-row items-center gap-16 shadow-3xl transition-all hover:bg-rose-950/10 group">
+                    <div className="h-40 w-40 shrink-0 rounded-[3rem] bg-rose-600 text-white flex items-center justify-center border-8 border-gray-950 shadow-[0_0_60px_rgba(225,29,72,0.4)] group-hover:scale-110 transition-transform">
+                        <Trash2 size={72} />
                     </div>
-                    <div>
-                        <h4 className="text-3xl font-black uppercase tracking-tighter text-red-500 mb-2">Self-Destruct (Delete Account)</h4>
-                        <p className="text-red-900/80 font-bold max-w-xl">This action is irreversible. All of your blogs, wellness data, and academic records will be permanently erased from the Synapse Synchrony network.</p>
+                    <div className="flex-1 space-y-4 text-center lg:text-left">
+                        <h4 className="text-6xl font-black uppercase italic tracking-tighter text-rose-500 leading-none">Dissolve Identity</h4>
+                        <p className="text-rose-900 text-xl font-bold max-w-3xl italic leading-relaxed border-l-4 border-rose-900/30 pl-10">
+                            Warning: Initializing the self-destruct protocol will permanently erase all neural logs, academic schedules, and blog manuscripts from the Neural Nexus. This action is <span className="text-rose-600 font-black underline">Absolute</span>.
+                        </p>
                     </div>
-                    <button className="rounded-2xl bg-red-600 px-8 py-4 font-black uppercase text-white hover:bg-red-500 transition shadow-xl shadow-red-900/20 active:scale-95">
-                        Destroy Data
-                    </button>
+                    <Button className="rounded-[3rem] bg-rose-600 px-16 py-12 text-sm font-black uppercase tracking-[0.3em] text-white hover:bg-rose-500 shadow-3xl hover:scale-105 active:scale-95 transition-all w-full lg:w-auto">
+                        EXECUTE_DELETE
+                    </Button>
                 </div>
             </div>
 
-            {/* Footer Padding */}
-            <div className="h-40"></div>
+            <footer className="mt-60 py-20 border-t border-gray-900 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[1.5em] text-gray-800 mb-10">Neural_Identity_Interface_v5.4.1</p>
+                <div className="flex justify-center gap-16 text-[9px] font-black text-gray-800 uppercase tracking-widest italic">
+                    <span className="hover:text-white transition-colors cursor-pointer">Security_Shell</span>
+                    <span className="hover:text-white transition-colors cursor-pointer">Protocol_Archives</span>
+                    <span className="text-gray-900">Hash: 0xNN-FF-02</span>
+                </div>
+            </footer>
         </div>
     );
 };

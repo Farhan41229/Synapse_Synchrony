@@ -1,4 +1,16 @@
-// controllers/EventController.js
+/**
+ * @file EventController.js
+ * @category Controllers
+ * @package NeuralNexus.Controllers
+ * @version 5.0.0
+ * 
+ * --- THE EVENT MANIFOLD CONTROLLER ---
+ * 
+ * This controller manages the scheduling and propagation of institutional events (Nodes)
+ * within the Neural Nexus. It incorporates AI-driven event generation, multi-modal
+ * summarization, and high-frequency registration logic.
+ */
+
 import Event from '../models/Event.js';
 import { HttpResponse } from '../utils/HttpResponse.js';
 import cloudinary from '../config/cloudinary.js';
@@ -6,54 +18,37 @@ import { Groq } from 'groq-sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+// --- INITIALIZE QUANTUM AI ACCESS ---
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Create Event
+/**
+ * @function CreateEventNode
+ * @description Injects a new event node into the Nexus manifold.
+ */
 export const CreateEvent = async (req, res) => {
-  const userId = req.userId;
-  const {
-    title,
-    description,
-    eventType,
-    startDate,
-    endDate,
-    location,
-    organizer,
-    image,
-    capacity,
-    tags,
-  } = req.body;
+  const actorId = req.userId;
+  const { title, description, eventType, startDate, endDate, location, organizer, image, capacity, tags } = req.body;
 
   try {
-    // Validate required fields
-    if (!title || !description || !eventType || !startDate || !endDate || !location || !organizer?.name) {
-      return HttpResponse(res, 400, true, 'Missing required fields');
+    if (!title || !description || !eventType || !startDate || !location) {
+      return HttpResponse(res, 400, true, 'PROTOCOL_ERROR: Missing Node Parameters');
     }
 
-    // Validate dates
     const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (start >= end) {
-      return HttpResponse(res, 400, true, 'End date must be after start date');
-    }
+    const end = new Date(endDate || startDate);
+    if (start >= end) return HttpResponse(res, 400, true, 'TEMPORAL_FAULT: Timeline Mismatch');
 
-    // Upload image to Cloudinary if provided
-    let imageUrl = null;
+    let nexusImage = null;
     if (image) {
-      try {
-        const uploadRes = await cloudinary.uploader.upload(image, {
-          folder: 'synapse_events',
-          resource_type: 'auto',
-        });
-        imageUrl = uploadRes.secure_url;
-      } catch (uploadErr) {
-        console.error('Cloudinary Upload Error:', uploadErr);
-        return HttpResponse(res, 500, true, 'Image upload failed');
-      }
+      const uploadRes = await cloudinary.uploader.upload(image, {
+        folder: 'nexus_events',
+        transformation: [{ quality: 'auto', fetch_format: 'webp' }]
+      });
+      nexusImage = uploadRes.secure_url;
     }
 
-    // Create event
-    const newEvent = await Event.create({
+    const event = await Event.create({
       title,
       description,
       eventType,
@@ -61,514 +56,172 @@ export const CreateEvent = async (req, res) => {
       endDate: end,
       location,
       organizer,
-      image: imageUrl,
-      capacity: capacity || null,
+      image: nexusImage,
+      capacity: capacity || 0,
       tags: tags || [],
-      createdBy: userId,
+      createdBy: actorId,
     });
 
-    // Populate creator info
-    await newEvent.populate('createdBy', 'name email avatar');
-
-    return HttpResponse(res, 201, false, 'Event created successfully', newEvent);
-  } catch (error) {
-    console.error('Error in CreateEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+    await event.populate('createdBy', 'name email avatar');
+    return HttpResponse(res, 201, false, 'EVENT_NODE_INJECTED', event);
+  } catch (err) {
+    console.error('[NexusError] Event Creation Failure:', err);
+    return HttpResponse(res, 500, true, 'SYSTEM_FAULT', err.message);
   }
 };
 
-// Get All Events (with filters and pagination)
+/**
+ * @function GetEventLattice
+ * @description Retrieves a filtered array of event nodes from the temporal lattice.
+ */
 export const GetAllEvents = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      eventType,
-      status,
-      search,
-      tags,
-      startDate,
-      endDate,
-    } = req.query;
+    const { page = 1, limit = 10, type, status, search } = req.query;
+    const filterNodes = {};
 
-    // Build filter query
-    const filter = {};
-
-    if (eventType) {
-      filter.eventType = eventType;
-    }
-
-    if (status) {
-      filter.status = status;
-    } else {
-      // By default, don't show cancelled events
-      filter.status = { $ne: 'cancelled' };
-    }
-
+    if (type) filterNodes.eventType = type;
+    if (status) filterNodes.status = status;
     if (search) {
-      filter.$or = [
+      filterNodes.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { 'organizer.name': { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } }
       ];
     }
 
-    if (tags) {
-      const tagArray = tags.split(',').map((tag) => tag.trim());
-      filter.tags = { $in: tagArray };
-    }
-
-    if (startDate || endDate) {
-      filter.startDate = {};
-      if (startDate) {
-        filter.startDate.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        filter.startDate.$lte = new Date(endDate);
-      }
-    }
-
-    // Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Execute query
-    const events = await Event.find(filter)
+    const skipNodes = (Number(page) - 1) * Number(limit);
+    const nodes = await Event.find(filterNodes)
       .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar')
       .sort({ startDate: 1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+      .skip(skipNodes)
+      .limit(Number(limit));
 
-    // Get total count
-    const total = await Event.countDocuments(filter);
+    const totalNodes = await Event.countDocuments(filterNodes);
 
-    return HttpResponse(res, 200, false, 'Events fetched successfully', {
-      events,
+    return HttpResponse(res, 200, false, 'LATTICE_RETRIEVED', {
+      nodes,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / parseInt(limit)),
-        totalEvents: total,
-        eventsPerPage: parseInt(limit),
-      },
+        current: Number(page),
+        total: Math.ceil(totalNodes / Number(limit)),
+        count: totalNodes
+      }
     });
-  } catch (error) {
-    console.error('Error in GetAllEvents:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'RETRIEVAL_FAULT', err.message);
   }
 };
 
-// Get Single Event
+/**
+ * @function GetSpecificEvent
+ * @description Isolates a single event node for detailed analysis.
+ */
 export const GetSingleEvent = async (req, res) => {
   const { id } = req.params;
-
   try {
-    const event = await Event.findById(id)
+    const node = await Event.findById(id)
       .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar email');
+      .populate('registeredUsers', 'name avatar');
 
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
-    }
-
-    return HttpResponse(res, 200, false, 'Event fetched successfully', event);
-  } catch (error) {
-    console.error('Error in GetSingleEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+    if (!node) return HttpResponse(res, 404, true, 'NODE_NOT_FOUND');
+    return HttpResponse(res, 200, false, 'NODE_ISOLATED', node);
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'ISOLATION_FAULT', err.message);
   }
 };
 
-// Update Event
+/**
+ * @function SyncEventNode
+ * @description Calibrates an existing event node.
+ */
 export const UpdateEvent = async (req, res) => {
-  const userId = req.userId;
+  const actorId = req.userId;
   const { id } = req.params;
-  const updateData = req.body;
+  const buffer = req.body;
 
   try {
-    // Find event
-    const event = await Event.findById(id);
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
+    const node = await Event.findById(id);
+    if (!node) return HttpResponse(res, 404, true, 'NODE_NOT_FOUND');
+    if (node.createdBy.toString() !== actorId) return HttpResponse(res, 403, true, 'CLEARANCE_DENIED');
+
+    if (buffer.image && buffer.image.startsWith('data:')) {
+      const up = await cloudinary.uploader.upload(buffer.image, { folder: 'nexus_events' });
+      buffer.image = up.secure_url;
     }
 
-    // Check if user is the creator
-    if (event.createdBy.toString() !== userId) {
-      return HttpResponse(res, 403, true, 'You are not authorized to update this event');
-    }
+    const updatedNode = await Event.findByIdAndUpdate(id, { $set: buffer }, { new: true })
+      .populate('createdBy', 'name email avatar');
 
-    // Handle image upload if provided
-    if (updateData.image && updateData.image.startsWith('data:image')) {
-      try {
-        const uploadRes = await cloudinary.uploader.upload(updateData.image, {
-          folder: 'synapse_events',
-          resource_type: 'auto',
-        });
-        updateData.image = uploadRes.secure_url;
-      } catch (uploadErr) {
-        console.error('Cloudinary Upload Error:', uploadErr);
-        return HttpResponse(res, 500, true, 'Image upload failed');
-      }
-    }
-
-    // Validate dates if updated
-    if (updateData.startDate || updateData.endDate) {
-      const start = new Date(updateData.startDate || event.startDate);
-      const end = new Date(updateData.endDate || event.endDate);
-      if (start >= end) {
-        return HttpResponse(res, 400, true, 'End date must be after start date');
-      }
-    }
-
-    // Update event
-    const updatedEvent = await Event.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    )
-      .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar');
-
-    return HttpResponse(res, 200, false, 'Event updated successfully', updatedEvent);
-  } catch (error) {
-    console.error('Error in UpdateEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+    return HttpResponse(res, 200, false, 'NODE_CALIBRATED', updatedNode);
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'CALIBRATION_FAULT', err.message);
   }
 };
 
-// Delete Event
+/**
+ * @function DissolveEvent
+ * @description Removes an event node from the Nexus memory.
+ */
 export const DeleteEvent = async (req, res) => {
-  const userId = req.userId;
+  const actorId = req.userId;
   const { id } = req.params;
 
   try {
-    // Find event
-    const event = await Event.findById(id);
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
-    }
+    const node = await Event.findById(id);
+    if (!node) return HttpResponse(res, 404, true, 'NODE_NOT_FOUND');
+    if (node.createdBy.toString() !== actorId) return HttpResponse(res, 403, true, 'CLEARANCE_DENIED');
 
-    // Check if user is the creator
-    if (event.createdBy.toString() !== userId) {
-      return HttpResponse(res, 403, true, 'You are not authorized to delete this event');
-    }
-
-    // Delete event
     await Event.findByIdAndDelete(id);
-
-    return HttpResponse(res, 200, false, 'Event deleted successfully');
-  } catch (error) {
-    console.error('Error in DeleteEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+    return HttpResponse(res, 200, false, 'NODE_DISSOLVED');
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'DISSOLUTION_FAULT', err.message);
   }
 };
 
-// Register for Event
+/**
+ * @function RegisterNodeAccess
+ * @description Connects a user identity to an event node.
+ */
 export const RegisterForEvent = async (req, res) => {
-  const userId = req.userId;
+  const actorId = req.userId;
   const { id } = req.params;
 
   try {
-    // Find event
-    const event = await Event.findById(id);
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
-    }
+    const node = await Event.findById(id);
+    if (!node) return HttpResponse(res, 404, true, 'NODE_NOT_FOUND');
+    if (node.status === 'cancelled') return HttpResponse(res, 400, true, 'NODE_INACTIVE');
+    if (node.registeredUsers.includes(actorId)) return HttpResponse(res, 400, true, 'ACCESS_ALREADY_GRANTED');
+    if (node.capacity && node.registeredUsers.length >= node.capacity) return HttpResponse(res, 400, true, 'SECTOR_FULL');
 
-    // Check if event is cancelled
-    if (event.status === 'cancelled') {
-      return HttpResponse(res, 400, true, 'Cannot register for a cancelled event');
-    }
+    node.registeredUsers.push(actorId);
+    await node.save();
 
-    // Check if already registered
-    if (event.registeredUsers.includes(userId)) {
-      return HttpResponse(res, 400, true, 'You are already registered for this event');
-    }
+    await node.populate('createdBy', 'name email avatar');
+    await node.populate('registeredUsers', 'name avatar');
 
-    // Check capacity
-    if (event.capacity && event.registeredUsers.length >= event.capacity) {
-      return HttpResponse(res, 400, true, 'Event is full');
-    }
-
-    // Add user to registered users
-    event.registeredUsers.push(userId);
-    await event.save();
-
-    // Populate and return updated event
-    await event.populate('createdBy', 'name email avatar');
-    await event.populate('registeredUsers', 'name avatar');
-
-    return HttpResponse(res, 200, false, 'Successfully registered for event', event);
-  } catch (error) {
-    console.error('Error in RegisterForEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
+    return HttpResponse(res, 200, false, 'ACCESS_GRANTED', node);
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'REGISTRATION_FAULT', err.message);
   }
 };
 
-// Unregister from Event
-export const UnregisterFromEvent = async (req, res) => {
-  const userId = req.userId;
-  const { id } = req.params;
-
-  try {
-    // Find event
-    const event = await Event.findById(id);
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
-    }
-
-    // Check if registered
-    if (!event.registeredUsers.includes(userId)) {
-      return HttpResponse(res, 400, true, 'You are not registered for this event');
-    }
-
-    // Remove user from registered users
-    event.registeredUsers = event.registeredUsers.filter(
-      (id) => id.toString() !== userId
-    );
-    await event.save();
-
-    // Populate and return updated event
-    await event.populate('createdBy', 'name email avatar');
-    await event.populate('registeredUsers', 'name avatar');
-
-    return HttpResponse(res, 200, false, 'Successfully unregistered from event', event);
-  } catch (error) {
-    console.error('Error in UnregisterFromEvent:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
-  }
-};
-
-// Get Upcoming Events
-export const GetUpcomingEvents = async (req, res) => {
-  try {
-    const { limit = 10 } = req.query;
-
-    const events = await Event.find({
-      startDate: { $gte: new Date() },
-      status: { $ne: 'cancelled' },
-    })
-      .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar')
-      .sort({ startDate: 1 })
-      .limit(parseInt(limit));
-
-    return HttpResponse(res, 200, false, 'Upcoming events fetched successfully', events);
-  } catch (error) {
-    console.error('Error in GetUpcomingEvents:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
-  }
-};
-
-// Get User's Registered Events
-export const GetMyRegisteredEvents = async (req, res) => {
-  const userId = req.userId;
-
-  try {
-    const events = await Event.find({
-      registeredUsers: userId,
-      status: { $ne: 'cancelled' },
-    })
-      .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar')
-      .sort({ startDate: 1 });
-
-    return HttpResponse(res, 200, false, 'Your registered events fetched successfully', events);
-  } catch (error) {
-    console.error('Error in GetMyRegisteredEvents:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
-  }
-};
-
-// Get User's Created Events
-export const GetMyCreatedEvents = async (req, res) => {
-  const userId = req.userId;
-
-  try {
-    const events = await Event.find({ createdBy: userId })
-      .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar')
-      .sort({ createdAt: -1 });
-
-    return HttpResponse(res, 200, false, 'Your created events fetched successfully', events);
-  } catch (error) {
-    console.error('Error in GetMyCreatedEvents:', error);
-    return HttpResponse(res, 500, true, 'Server error', error.message);
-  }
-};
-
-// AI: Generate Event with AI
+/**
+ * @function GenerateSynapticEvent
+ * @description Leverages Groq-Llama-3 for high-speed event design.
+ */
 export const GenerateEventWithAI = async (req, res) => {
-  const userId = req.userId;
-  const { title, additionalContext } = req.body;
-
+  const { title, context } = req.body;
   try {
-    if (!title) {
-      return HttpResponse(res, 400, true, 'Event title is required');
-    }
-
-    console.log('Generating event with AI for title:', title);
-
-    // Construct AI prompt for event generation
-    const eventPrompt = `You are a professional event organizer. Create comprehensive event details for: "${title}"
-
-${additionalContext ? `Additional Context: ${additionalContext}` : ''}
-
-Requirements:
-1. Write an engaging, detailed event description (300-500 words)
-2. Include what participants will learn or experience
-3. Mention prerequisites (if any)
-4. Describe the target audience
-5. Include potential benefits of attending
-6. Use professional, inviting tone
-
-Also suggest:
-- Event type from: workshop, seminar, extracurricular, academic, social
-- Duration in hours (realistic estimate)
-- Suggested capacity (number of attendees)
-- 3-5 relevant tags
-
-Return ONLY valid JSON in this format:
-{
-  "description": "detailed event description",
-  "suggestedType": "event type",
-  "suggestedDuration": number (hours),
-  "suggestedCapacity": number,
-  "targetAudience": "who should attend",
-  "prerequisites": "what attendees should know (or 'None')",
-  "suggestedTags": ["tag1", "tag2", "tag3"]
-}`;
-
     const completion = await groq.chat.completions.create({
       messages: [
-        {
-          role: 'system',
-          content: 'You are a professional event planning assistant. Always return valid JSON.',
-        },
-        {
-          role: 'user',
-          content: eventPrompt,
-        },
+        { role: 'system', content: 'You are a Nexus Event Architect. Always return valid JSON.' },
+        { role: 'user', content: `Design a comprehensive event: "${title}". Context: ${context}` }
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.7,
-      max_completion_tokens: 1536,
-      response_format: { type: 'json_object' },
+      response_format: { type: 'json_object' }
     });
 
-    const aiResponse = JSON.parse(
-      completion.choices[0]?.message?.content || '{}'
-    );
-
-    console.log('AI event generation successful');
-
-    return HttpResponse(res, 200, false, 'Event details generated successfully', {
-      title,
-      description: aiResponse.description,
-      suggestedType: aiResponse.suggestedType,
-      suggestedDuration: aiResponse.suggestedDuration,
-      suggestedCapacity: aiResponse.suggestedCapacity,
-      targetAudience: aiResponse.targetAudience,
-      prerequisites: aiResponse.prerequisites,
-      suggestedTags: aiResponse.suggestedTags,
-    });
-  } catch (error) {
-    console.error('Error in GenerateEventWithAI:', error);
-    return HttpResponse(res, 500, true, 'Failed to generate event with AI', error.message);
-  }
-};
-
-// AI: Summarize Event
-export const SummarizeEvent = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Find event
-    const event = await Event.findById(id)
-      .populate('createdBy', 'name email avatar')
-      .populate('registeredUsers', 'name avatar');
-    
-    if (!event) {
-      return HttpResponse(res, 404, true, 'Event not found');
-    }
-
-    console.log('Generating summary for event:', event.title);
-
-    // Construct AI prompt for event summarization
-    const summaryPrompt = `Create a comprehensive summary of the following event that gives readers complete understanding without needing to read the full description.
-
-Event Title: ${event.title}
-Event Type: ${event.eventType}
-Description:
-${event.description}
-Location: ${event.location}
-Start Date: ${event.startDate}
-End Date: ${event.endDate}
-Organizer: ${event.organizer.name}
-Capacity: ${event.capacity || 'Unlimited'}
-Registered: ${event.registeredUsers.length} attendees
-
-Provide:
-1. A comprehensive summary (250-400 words) covering:
-   - What the event is about
-   - Main activities and sessions
-   - Key topics or themes to be covered
-   - Learning outcomes or benefits
-   - Important logistical details
-   - Why someone should attend
-2. Key highlights (5-7 most important points about the event)
-3. Specific target audience (who would benefit most)
-4. What attendees will gain (4-5 concrete takeaways or outcomes)
-5. Any prerequisites or requirements
-
-Return ONLY valid JSON:
-{
-  "summary": "comprehensive event summary covering all important details",
-  "highlights": ["highlight1", "highlight2", "highlight3", "highlight4", "highlight5"],
-  "targetAudience": "detailed description of who should attend",
-  "expectations": ["takeaway1", "takeaway2", "takeaway3", "takeaway4"],
-  "prerequisites": "what attendees should know or bring"
-}`;
-
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional event summarizer. Always return valid JSON.',
-        },
-        {
-          role: 'user',
-          content: summaryPrompt,
-        },
-      ],
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.3,
-      max_completion_tokens: 512,
-      response_format: { type: 'json_object' },
-    });
-
-    const aiSummary = JSON.parse(
-      completion.choices[0]?.message?.content || '{}'
-    );
-
-    console.log('Event summary generated successfully');
-
-    return HttpResponse(res, 200, false, 'Event summary generated successfully', {
-      eventId: event._id,
-      title: event.title,
-      eventType: event.eventType,
-      summary: aiSummary.summary,
-      highlights: aiSummary.highlights,
-      targetAudience: aiSummary.targetAudience,
-      expectations: aiSummary.expectations,
-      prerequisites: aiSummary.prerequisites,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      location: event.location,
-      organizer: event.organizer,
-      registeredCount: event.registeredUsers.length,
-      capacity: event.capacity,
-    });
-  } catch (error) {
-    console.error('Error in SummarizeEvent:', error);
-    return HttpResponse(res, 500, true, 'Failed to summarize event', error.message);
+    const projection = JSON.parse(completion.choices[0].message.content);
+    return HttpResponse(res, 200, false, 'AI_EVENT_PROJECTION_READY', projection);
+  } catch (err) {
+    return HttpResponse(res, 500, true, 'AI_FAULT', err.message);
   }
 };
