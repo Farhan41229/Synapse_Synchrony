@@ -1,0 +1,70 @@
+[
+    {
+        "id": "UN-2026-0001",
+        "personal": {
+            "firstName": "Aris",
+            "lastName": "Thorne",
+            "email": "aris.thorne@neuralnexus.edu",
+            "major": "Cyber-Physical Systems",
+            "year": 3,
+            "bio": "Specializing in synaptic interface optimization and decentralized autonomous lattices."
+        },
+        "academic": {
+            "gpa": 3.92,
+            "credits": 94,
+            "courses": [
+                "CPS-301",
+                "SYN-402",
+                "DYN-205"
+            ],
+            "standing": "Excellent"
+        },
+        "wellness": {
+            "averageMood": "Focused",
+            "sleepHours": 7.2,
+            "stressLevel": "Moderate",
+            "activeProtocols": [
+                "Cerebral-Flow-12"
+            ]
+        },
+        "metadata": {
+            "created": "2026-01-15T08:00:00Z",
+            "lastSync": "2026-03-01T10:24:55Z",
+            "region": "Sector 7-G"
+        }
+    },
+    {
+        "id": "UN-2026-0002",
+        "personal": {
+            "firstName": "Lyra",
+            "lastName": "Vance",
+            "email": "lyra.vance@neuralnexus.edu",
+            "major": "Quantum Semantics",
+            "year": 2,
+            "bio": "Exploring the intersection of non-linear linguistics and qubit data structures."
+        },
+        "academic": {
+            "gpa": 3.85,
+            "credits": 64,
+            "courses": [
+                "LIN-210",
+                "QNT-101",
+                "SEM-303"
+            ],
+            "standing": "Dean's List"
+        },
+        "wellness": {
+            "averageMood": "Curious",
+            "sleepHours": 6.8,
+            "stressLevel": "Low",
+            "activeProtocols": [
+                "Semantic-Buffer-Alpha"
+            ]
+        },
+        "metadata": {
+            "created": "2026-01-16T09:15:00Z",
+            "lastSync": "2026-03-01T11:45:12Z",
+            "region": "Aether Cluster"
+        }
+    }
+]
